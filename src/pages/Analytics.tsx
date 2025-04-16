@@ -1,13 +1,12 @@
 
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { VideoGrid } from "@/components/youtube/VideoGrid";
 import { AnalyticsPanel } from "@/components/youtube/AnalyticsPanel";
-import { SearchBox } from "@/components/youtube/SearchBox";
+import { AIInsightsPanel } from "@/components/youtube/AIInsightsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, BarChart2, Rocket } from "lucide-react";
+import { BarChart2, Lightbulb } from "lucide-react";
 
-const Index = () => {
+const Analytics = () => {
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-white font-sans">
       <Sidebar />
@@ -19,10 +18,10 @@ const Index = () => {
               <CardContent className="pt-6">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h1 className="text-2xl font-bold mb-2">YouTube Dashboard</h1>
-                    <p className="opacity-90">Search and analyze YouTube videos with AI-powered insights</p>
+                    <h1 className="text-2xl font-bold mb-2">Analytics Dashboard</h1>
+                    <p className="opacity-90">Track your channel performance and discover growth opportunities</p>
                   </div>
-                  <Rocket size={48} className="opacity-75" />
+                  <BarChart2 size={48} className="opacity-75" />
                 </div>
               </CardContent>
             </Card>
@@ -33,7 +32,7 @@ const Index = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-semibold flex items-center gap-2">
                   <BarChart2 className="h-5 w-5" />
-                  Quick Analytics
+                  Channel Performance
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -46,12 +45,12 @@ const Index = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                  <Search className="h-5 w-5" />
-                  Search YouTube
+                  <Lightbulb className="h-5 w-5" />
+                  AI Growth Insights
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <SearchBox />
+                <AIInsightsPanel />
               </CardContent>
             </Card>
           </section>
@@ -61,4 +60,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Analytics;

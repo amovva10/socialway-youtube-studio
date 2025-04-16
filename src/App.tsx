@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import YoutubeConnected from "./pages/YoutubeConnected";
 import ContentGenerator from "./pages/ContentGenerator";
 import Upload from "./pages/Upload";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/generator" element={<ContentGenerator />} />
           <Route path="/youtube-connected" element={<YoutubeConnected />} />
           <Route path="/upload" element={<Upload />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

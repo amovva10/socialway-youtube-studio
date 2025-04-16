@@ -1,26 +1,58 @@
 
+import { useState, useEffect } from 'react';
 import { Eye, ThumbsUp, Clock, Users, TrendingUp, BarChart2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// Mock chart data for demo
-const chartData = [
-  { name: 'Jan', views: 1000, likes: 500 },
-  { name: 'Feb', views: 2000, likes: 700 },
-  { name: 'Mar', views: 1500, likes: 600 },
-  { name: 'Apr', views: 3000, likes: 1200 },
-  { name: 'May', views: 2500, likes: 900 },
-  { name: 'Jun', views: 4000, likes: 1800 },
-  { name: 'Jul', views: 3500, likes: 1500 },
-];
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 export const AnalyticsPanel = () => {
-  // More realistic statistics
-  const stats = [
-    { icon: Eye, label: 'Total Views', value: '12,546', change: '+12.5%' },
-    { icon: ThumbsUp, label: 'Total Likes', value: '3,128', change: '+8.2%' },
-    { icon: Clock, label: 'Watch Time', value: '425hrs', change: '+15.3%' },
-    { icon: Users, label: 'Subscribers', value: '1,236', change: '+5.7%' }
-  ];
+  const [loading, setLoading] = useState(false);
+  
+  // Real applications would fetch this data from an API
+  const [stats, setStats] = useState([
+    { icon: Eye, label: 'Total Views', value: 'Loading...', change: '...' },
+    { icon: ThumbsUp, label: 'Total Likes', value: 'Loading...', change: '...' },
+    { icon: Clock, label: 'Watch Time', value: 'Loading...', change: '...' },
+    { icon: Users, label: 'Subscribers', value: 'Loading...', change: '...' }
+  ]);
+  
+  const [chartData, setChartData] = useState([]);
+  const [topVideos, setTopVideos] = useState([]);
+
+  useEffect(() => {
+    // Simulating data loading
+    setLoading(true);
+    
+    // In a real app, this would be an API call to get actual analytics data
+    setTimeout(() => {
+      setStats([
+        { icon: Eye, label: 'Total Views', value: '0', change: '0%' },
+        { icon: ThumbsUp, label: 'Total Likes', value: '0', change: '0%' },
+        { icon: Clock, label: 'Watch Time', value: '0hrs', change: '0%' },
+        { icon: Users, label: 'Subscribers', value: '0', change: '0%' }
+      ]);
+      
+      setChartData([
+        { name: 'Jan', views: 0, likes: 0 },
+        { name: 'Feb', views: 0, likes: 0 },
+        { name: 'Mar', views: 0, likes: 0 },
+        { name: 'Apr', views: 0, likes: 0 },
+        { name: 'May', views: 0, likes: 0 },
+        { name: 'Jun', views: 0, likes: 0 },
+        { name: 'Jul', views: 0, likes: 0 },
+      ]);
+      
+      setTopVideos([]);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -34,7 +66,7 @@ export const AnalyticsPanel = () => {
             <div className="flex items-end justify-between">
               <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
               {stat.change && (
-                <span className="text-sm text-green-500">{stat.change}</span>
+                <span className="text-sm text-gray-500">{stat.change}</span>
               )}
             </div>
           </div>
@@ -47,31 +79,66 @@ export const AnalyticsPanel = () => {
           <h3 className="font-medium text-lg">Performance Trends</h3>
         </div>
         <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2} />
-              <Line type="monotone" dataKey="likes" stroke="#10b981" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
+          {chartData.length > 0 ? (
+            <ChartContainer
+              config={{
+                views: {
+                  label: "Views",
+                  theme: {
+                    light: "#3b82f6",
+                    dark: "#60a5fa",
+                  },
+                },
+                likes: {
+                  label: "Likes",
+                  theme: {
+                    light: "#10b981",
+                    dark: "#34d399",
+                  },
+                },
+              }}
+            >
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <ChartTooltip
+                  content={({ active, payload }) => (
+                    <ChartTooltipContent active={active} payload={payload} />
+                  )}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="views"
+                  stroke="var(--color-views)"
+                  strokeWidth={2}
+                  name="views"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="likes"
+                  stroke="var(--color-likes)"
+                  strokeWidth={2}
+                  name="likes"
+                />
+              </LineChart>
+            </ChartContainer>
+          ) : (
+            <div className="flex justify-center items-center h-full bg-gray-50 rounded-lg">
+              <p className="text-gray-500">No performance data available</p>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <div className="flex items-center space-x-3 text-blue-500 mb-5">
-            <BarChart2 size={24} />
-            <h3 className="font-medium text-lg">Top Performing Content</h3>
-          </div>
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="flex items-center space-x-3 text-blue-500 mb-5">
+          <BarChart2 size={24} />
+          <h3 className="font-medium text-lg">Top Performing Content</h3>
+        </div>
+        {topVideos.length > 0 ? (
           <div className="space-y-4">
-            {[
-              { title: 'How to Master YouTube SEO', views: '4.2K', engagement: '9.8%' },
-              { title: 'Advanced Video Editing Tutorial', views: '3.5K', engagement: '8.7%' },
-              { title: '10 Tips for Growing Your Channel', views: '2.8K', engagement: '7.5%' }
-            ].map((video, index) => (
+            {topVideos.map((video, index) => (
               <div key={index} className="flex items-center justify-between border-b pb-3 last:border-0">
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-800 mb-1 line-clamp-1">{video.title}</h4>
@@ -87,32 +154,11 @@ export const AnalyticsPanel = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <div className="flex items-center space-x-3 text-blue-500 mb-5">
-            <Users size={24} />
-            <h3 className="font-medium text-lg">Audience Demographics</h3>
+        ) : (
+          <div className="flex justify-center items-center py-8 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">No video performance data available</p>
           </div>
-          <div className="grid grid-cols-2 gap-y-4">
-            <div>
-              <h4 className="text-sm text-gray-500 mb-1">Age Range</h4>
-              <p className="font-medium">18-34 (65%)</p>
-            </div>
-            <div>
-              <h4 className="text-sm text-gray-500 mb-1">Gender</h4>
-              <p className="font-medium">Male: 58% | Female: 42%</p>
-            </div>
-            <div>
-              <h4 className="text-sm text-gray-500 mb-1">Top Country</h4>
-              <p className="font-medium">United States (42%)</p>
-            </div>
-            <div>
-              <h4 className="text-sm text-gray-500 mb-1">Language</h4>
-              <p className="font-medium">English (85%)</p>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
