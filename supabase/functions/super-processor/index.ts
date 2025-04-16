@@ -1,4 +1,3 @@
-
 // Deno edge function to handle YouTube search and video insights
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -17,11 +16,74 @@ serve(async (req) => {
 
   // Parse the request body
   const requestData = await req.json();
-  const { query, videoId } = requestData;
+  const { query, videoId, accessToken, action } = requestData;
 
   console.log("Request data:", requestData);
 
   try {
+    // Handle channel analytics request
+    if (action === 'channel-analytics' && accessToken) {
+      console.log(`Fetching channel analytics with access token`);
+      
+      // Get channel statistics
+      const channelResponse = await fetch(
+        'https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&mine=true',
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      );
+      
+      if (!channelResponse.ok) {
+        console.error(`YouTube API error: ${channelResponse.status}`);
+        throw new Error(`YouTube API error: ${channelResponse.status}`);
+      }
+      
+      const channelData = await channelResponse.json();
+      
+      if (!channelData.items || channelData.items.length === 0) {
+        throw new Error('Channel not found');
+      }
+      
+      const channel = channelData.items[0];
+      const stats = channel.statistics;
+      
+      // For comparison data, we'll simulate a percentage change
+      // In a real app, you would compare with historical data
+      const getRandom = () => {
+        const sign = Math.random() > 0.5 ? '+' : '';
+        return `${sign}${(Math.random() * 20).toFixed(1)}%`;
+      };
+      
+      const analytics = {
+        views: {
+          value: parseInt(stats.viewCount).toLocaleString(),
+          change: getRandom()
+        },
+        subscribers: {
+          value: parseInt(stats.subscriberCount).toLocaleString(),
+          change: getRandom()
+        },
+        videos: {
+          value: parseInt(stats.videoCount).toLocaleString(), 
+          change: getRandom()
+        },
+        // For watch time, we would need YouTube Analytics API
+        // This is a placeholder since watch time requires additional scopes
+        watchTime: {
+          value: `${Math.floor(parseInt(stats.viewCount) * 0.05 / 60)}hrs`,
+          change: getRandom()
+        }
+      };
+      
+      console.log("Returning analytics:", analytics);
+      
+      return new Response(JSON.stringify(analytics), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
     // Handle video insights request
     if (videoId) {
       console.log(`Fetching insights for video: ${videoId}`);
@@ -141,7 +203,7 @@ serve(async (req) => {
       });
     }
     
-    return new Response(JSON.stringify({ error: 'Missing query or videoId' }), {
+    return new Response(JSON.stringify({ error: 'Missing query, videoId, or action parameter' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
