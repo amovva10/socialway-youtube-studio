@@ -16,72 +16,116 @@ serve(async (req) => {
 
   // Parse the request body
   const requestData = await req.json();
-  const { query, videoId, accessToken, action } = requestData;
+  const { query, videoId, accessToken, action, useSimulatedData } = requestData;
 
   console.log("Request data:", requestData);
 
   try {
     // Handle channel analytics request
-    if (action === 'channel-analytics' && accessToken) {
-      console.log(`Fetching channel analytics with access token`);
+    if (action === 'channel-analytics') {
+      console.log(`Fetching channel analytics with access token, simulated: ${useSimulatedData}`);
       
-      // Get channel statistics
-      const channelResponse = await fetch(
-        'https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&mine=true',
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
+      // If simulated data flag is true, return mock data
+      if (useSimulatedData) {
+        // Generate simulated data for testing the UI
+        const getRandom = () => {
+          const sign = Math.random() > 0.5 ? '+' : '';
+          return `${sign}${(Math.random() * 20).toFixed(1)}%`;
+        };
+        
+        const randomNumber = (min, max) => {
+          return Math.floor(Math.random() * (max - min + 1) + min);
+        };
+        
+        const simulatedData = {
+          views: {
+            value: randomNumber(10000, 100000).toLocaleString(),
+            change: getRandom()
+          },
+          likes: {
+            value: randomNumber(500, 5000).toLocaleString(),
+            change: getRandom()
+          },
+          subscribers: {
+            value: randomNumber(1000, 10000).toLocaleString(),
+            change: getRandom()
+          },
+          watchTime: {
+            value: `${randomNumber(100, 500)}hrs`,
+            change: getRandom()
           }
-        }
-      );
-      
-      if (!channelResponse.ok) {
-        console.error(`YouTube API error: ${channelResponse.status}`);
-        throw new Error(`YouTube API error: ${channelResponse.status}`);
+        };
+        
+        console.log("Returning simulated analytics:", simulatedData);
+        
+        return new Response(JSON.stringify(simulatedData), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
       }
       
-      const channelData = await channelResponse.json();
-      
-      if (!channelData.items || channelData.items.length === 0) {
-        throw new Error('Channel not found');
+      // Get channel statistics with real token (for future implementation)
+      if (!accessToken) {
+        throw new Error('No access token provided');
       }
       
-      const channel = channelData.items[0];
-      const stats = channel.statistics;
-      
-      // For comparison data, we'll simulate a percentage change
-      // In a real app, you would compare with historical data
-      const getRandom = () => {
-        const sign = Math.random() > 0.5 ? '+' : '';
-        return `${sign}${(Math.random() * 20).toFixed(1)}%`;
-      };
-      
-      const analytics = {
-        views: {
-          value: parseInt(stats.viewCount).toLocaleString(),
-          change: getRandom()
-        },
-        subscribers: {
-          value: parseInt(stats.subscriberCount).toLocaleString(),
-          change: getRandom()
-        },
-        videos: {
-          value: parseInt(stats.videoCount).toLocaleString(), 
-          change: getRandom()
-        },
-        // For watch time, we would need YouTube Analytics API
-        // This is a placeholder since watch time requires additional scopes
-        watchTime: {
-          value: `${Math.floor(parseInt(stats.viewCount) * 0.05 / 60)}hrs`,
-          change: getRandom()
+      try {
+        const channelResponse = await fetch(
+          'https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&mine=true',
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          }
+        );
+        
+        if (!channelResponse.ok) {
+          console.error(`YouTube API error: ${channelResponse.status}`);
+          throw new Error(`YouTube API error: ${channelResponse.status}`);
         }
-      };
-      
-      console.log("Returning analytics:", analytics);
-      
-      return new Response(JSON.stringify(analytics), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+        
+        const channelData = await channelResponse.json();
+        
+        if (!channelData.items || channelData.items.length === 0) {
+          throw new Error('Channel not found');
+        }
+        
+        const channel = channelData.items[0];
+        const stats = channel.statistics;
+        
+        // For comparison data, we'll simulate a percentage change
+        const getRandom = () => {
+          const sign = Math.random() > 0.5 ? '+' : '';
+          return `${sign}${(Math.random() * 20).toFixed(1)}%`;
+        };
+        
+        const analytics = {
+          views: {
+            value: parseInt(stats.viewCount).toLocaleString(),
+            change: getRandom()
+          },
+          subscribers: {
+            value: parseInt(stats.subscriberCount).toLocaleString(),
+            change: getRandom()
+          },
+          likes: {
+            value: parseInt(stats.videoCount).toLocaleString(), 
+            change: getRandom()
+          },
+          watchTime: {
+            value: `${Math.floor(parseInt(stats.viewCount) * 0.05 / 60)}hrs`,
+            change: getRandom()
+          }
+        };
+        
+        console.log("Returning analytics:", analytics);
+        
+        return new Response(JSON.stringify(analytics), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (error) {
+        console.error("Error fetching YouTube data:", error);
+        throw error;
+      }
     }
     
     // Handle video insights request

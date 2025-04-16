@@ -12,6 +12,7 @@ const YoutubeConnected = () => {
   const channelName = searchParams.get('channel') || 'Unknown';
   const channelId = searchParams.get('id') || 'Unknown';
   const thumbnailUrl = searchParams.get('thumbnail') || '';
+  const accessToken = searchParams.get('access_token') || '';
 
   useEffect(() => {
     // Store channel info in localStorage
@@ -20,10 +21,16 @@ const YoutubeConnected = () => {
         name: channelName,
         id: channelId,
         thumbnail: thumbnailUrl,
-        connected: true
+        connected: true,
+        accessToken: accessToken
       }));
       
-      console.log('YouTube channel info saved:', { channelName, channelId, hasThumbnail: !!thumbnailUrl });
+      console.log('YouTube channel info saved:', { 
+        channelName, 
+        channelId, 
+        hasThumbnail: !!thumbnailUrl,
+        hasAccessToken: !!accessToken 
+      });
     }
     
     const timer = setInterval(() => {
@@ -38,7 +45,7 @@ const YoutubeConnected = () => {
       clearInterval(timer);
       clearTimeout(redirect);
     };
-  }, [navigate, channelName, channelId, thumbnailUrl]);
+  }, [navigate, channelName, channelId, thumbnailUrl, accessToken]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-white p-6">

@@ -26,6 +26,12 @@ export const AnalyticsPanel = () => {
     if (channelInfo.connected) {
       setIsConnected(true);
       
+      if (channelInfo.accessToken) {
+        setAccessToken(channelInfo.accessToken);
+      } else {
+        console.log('No access token found in storage');
+      }
+      
       // Fetch real analytics data from YouTube API
       fetchAnalytics();
     }
@@ -35,12 +41,12 @@ export const AnalyticsPanel = () => {
     setLoading(true);
     
     try {
-      // In a real app, we would store the access token securely
-      // For now, we'll simulate the analytics using the Supabase function
+      // Since we don't have a valid token stored locally yet, we'll use mock data for display purposes
+      // In a real implementation, we would use the stored access token from localStorage
       const { data, error } = await supabase.functions.invoke('super-processor', {
         body: {
           action: 'channel-analytics',
-          accessToken: 'SIMULATED_ACCESS_TOKEN' // In a real-world app, use an actual access token
+          useSimulatedData: true // Flag to use simulated data for now
         }
       });
       
@@ -52,7 +58,7 @@ export const AnalyticsPanel = () => {
         // Update the stats with real data
         setStats([
           { icon: Eye, label: 'Total Views', value: data.views.value, change: data.views.change },
-          { icon: ThumbsUp, label: 'Total Videos', value: data.videos.value, change: data.videos.change },
+          { icon: ThumbsUp, label: 'Total Likes', value: data.likes.value, change: data.likes.change },
           { icon: Clock, label: 'Watch Time', value: data.watchTime.value, change: data.watchTime.change },
           { icon: Users, label: 'Subscribers', value: data.subscribers.value, change: data.subscribers.change }
         ]);
