@@ -4,55 +4,89 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Lightbulb, TrendingUp, Users, Clock, ExternalLink } from 'lucide-react';
 import { ConnectButton } from './ConnectButton';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 export const AIInsightsPanel = () => {
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [accessToken, setAccessToken] = useState('');
+  const { toast } = useToast();
   
-  // In a real app, these would come from an API call
-  const insights = [
+  const [insights, setInsights] = useState([
     {
       category: "Content Strategy",
       icon: TrendingUp,
-      items: [
-        "Your tutorial videos receive 42% more engagement than other content types. Consider creating a focused tutorial series.",
-        "Videos posted on Tuesdays and Thursdays between 4-6pm have shown higher view rates.",
-        "Videos that include 'How to' in the title have 35% higher click-through rates."
-      ]
+      items: []
     },
     {
       category: "Audience Growth",
       icon: Users,
-      items: [
-        "Your channel is growing fastest among viewers aged 25-34. Consider tailoring content to this demographic.",
-        "Viewers from tech and education sectors engage most with your content.",
-        "Collaboration opportunities with channels in similar niches could expand your audience by an estimated 15-20%."
-      ]
+      items: []
     },
     {
       category: "Retention Optimization",
       icon: Clock,
-      items: [
-        "Average view duration drops significantly after 8 minutes. Consider shorter, more focused content.",
-        "Adding timestamps to longer videos could improve retention by up to 18%.",
-        "Videos with calls-to-action in the first 30 seconds show 27% better subscriber conversion."
-      ]
+      items: []
     }
-  ];
+  ]);
 
   useEffect(() => {
     // Check if YouTube channel is connected
     const channelInfo = JSON.parse(localStorage.getItem('youtubeChannel') || '{}');
     if (channelInfo.connected) {
       setIsConnected(true);
+      
+      if (channelInfo.accessToken) {
+        setAccessToken(channelInfo.accessToken);
+      }
+      
       setLoading(true);
       
-      // Simulate loading AI insights
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      // Fetch AI insights based on channel data
+      fetchAIInsights(channelInfo.accessToken);
     }
   }, []);
+
+  const fetchAIInsights = async (token) => {
+    try {
+      console.log('Fetching AI insights with token available:', !!token);
+      
+      const { data, error } = await supabase.functions.invoke('super-processor', {
+        body: {
+          action: 'channel-insights',
+          accessToken: token
+        }
+      });
+      
+      if (error) {
+        console.error('Error fetching insights:', error);
+        throw error;
+      }
+      
+      if (data && data.insights) {
+        // Update the insights with personalized data
+        setInsights(data.insights.map(category => ({
+          ...category,
+          items: category.items || []
+        })));
+        
+        toast({
+          title: "Insights Generated",
+          description: "AI growth insights have been personalized for your channel.",
+        });
+      }
+    } catch (error) {
+      console.error('Error generating AI insights:', error);
+      toast({
+        title: "Error Generating Insights",
+        description: error.message || "Could not generate personalized insights",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -92,14 +126,20 @@ export const AIInsightsPanel = () => {
         {insights.map((category) => (
           <TabsContent key={category.category} value={category.category.toLowerCase().split(' ')[0]}>
             <div className="space-y-4">
-              {category.items.map((insight, index) => (
-                <Card key={index} className="border-l-4 border-l-blue-500">
-                  <CardContent className="p-4 flex items-start gap-3">
-                    <Lightbulb className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-gray-700">{insight}</p>
-                  </CardContent>
-                </Card>
-              ))}
+              {category.items.length > 0 ? (
+                category.items.map((insight, index) => (
+                  <Card key={index} className="border-l-4 border-l-blue-500">
+                    <CardContent className="p-4 flex items-start gap-3">
+                      <Lightbulb className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-gray-700">{insight}</p>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Loading personalized insights for your channel...</p>
+                </div>
+              )}
               
               <div className="pt-3">
                 <a 

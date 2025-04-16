@@ -22,6 +22,94 @@ serve(async (req) => {
   console.log("Request data:", requestData);
 
   try {
+    // Handle AI channel insights request
+    if (action === 'channel-insights') {
+      console.log(`Generating AI insights for channel with token available: ${!!accessToken}`);
+      
+      let channelData = null;
+      let videoStats = null;
+      let insightsData = null;
+      
+      // If we have an access token, fetch real channel data
+      if (accessToken) {
+        try {
+          // Fetch channel details first
+          const channelResponse = await fetch(
+            'https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet,contentDetails&mine=true',
+            {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`
+              }
+            }
+          );
+          
+          if (!channelResponse.ok) {
+            console.error(`YouTube API error fetching channel: ${channelResponse.status}`);
+            throw new Error(`YouTube API error: ${channelResponse.status}`);
+          }
+          
+          const channelInfo = await channelResponse.json();
+          
+          if (!channelInfo.items || channelInfo.items.length === 0) {
+            throw new Error('Channel not found');
+          }
+          
+          channelData = channelInfo.items[0];
+          console.log("Retrieved channel data:", channelData.id);
+          
+          // Fetch the channel's videos
+          const videosResponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelData.id}&maxResults=10&order=date&type=video`,
+            {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`
+              }
+            }
+          );
+          
+          if (!videosResponse.ok) {
+            console.error(`YouTube API error fetching videos: ${videosResponse.status}`);
+            throw new Error(`YouTube API error: ${videosResponse.status}`);
+          }
+          
+          const videosInfo = await videosResponse.json();
+          
+          if (videosInfo.items && videosInfo.items.length > 0) {
+            // Get video IDs
+            const videoIds = videosInfo.items.map(item => item.id.videoId).join(',');
+            
+            // Fetch video statistics
+            const videoStatsResponse = await fetch(
+              `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails&id=${videoIds}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`
+                }
+              }
+            );
+            
+            if (videoStatsResponse.ok) {
+              videoStats = await videoStatsResponse.json();
+              console.log(`Retrieved stats for ${videoStats.items?.length || 0} videos`);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching YouTube data:", error);
+          // Fall back to simulated data
+          console.log("Falling back to simulated insights due to error");
+        }
+      }
+      
+      // Generate personalized insights based on the fetched data
+      insightsData = generatePersonalizedInsights(channelData, videoStats);
+      
+      console.log("Generated insights:", insightsData ? insightsData.length : 0);
+      
+      return new Response(JSON.stringify({ insights: insightsData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
     // Handle channel analytics request
     if (action === 'channel-analytics') {
       console.log(`Fetching channel analytics with access token, simulated: ${useSimulatedData}`);
@@ -263,3 +351,130 @@ serve(async (req) => {
     });
   }
 });
+
+// Generate personalized insights based on channel data
+function generatePersonalizedInsights(channelData, videoStats) {
+  const insights = [
+    {
+      category: "Content Strategy",
+      icon: "TrendingUp",
+      items: []
+    },
+    {
+      category: "Audience Growth",
+      icon: "Users",
+      items: []
+    },
+    {
+      category: "Retention Optimization",
+      icon: "Clock",
+      items: []
+    }
+  ];
+  
+  // If we have real channel data
+  if (channelData) {
+    const stats = channelData.statistics;
+    const details = channelData.snippet;
+    const viewCount = parseInt(stats.viewCount || '0');
+    const subscriberCount = parseInt(stats.subscriberCount || '0');
+    const videoCount = parseInt(stats.videoCount || '0');
+    
+    // Content Strategy insights
+    insights[0].items = [
+      `Your channel has ${videoCount} videos with a total of ${viewCount.toLocaleString()} views. Consider posting more consistently to boost engagement.`,
+      `Channel name "${details.title}" is ${details.title.length} characters long. Shorter, memorable names can help with brand recognition.`,
+      `Your channel description is ${details.description ? details.description.length : 0} characters. Expand it with keywords to improve discoverability.`
+    ];
+    
+    // Audience Growth insights
+    insights[1].items = [
+      `You currently have ${subscriberCount.toLocaleString()} subscribers. Creating a content series could help boost subscriber growth.`,
+      `With an average of ${(viewCount / (videoCount || 1)).toFixed(0)} views per video, focus on cross-promoting your videos to increase watch time.`,
+      `Adding end screens and cards to your videos can increase channel navigation and subscriber conversion.`
+    ];
+    
+    // Analyze video stats if available
+    if (videoStats && videoStats.items && videoStats.items.length > 0) {
+      // Find the most engaging videos (highest like-to-view ratio)
+      const analyzedVideos = videoStats.items.map(video => {
+        const views = parseInt(video.statistics.viewCount || '0');
+        const likes = parseInt(video.statistics.likeCount || '0');
+        const comments = parseInt(video.statistics.commentCount || '0');
+        const engagement = views > 0 ? (likes + comments) / views : 0;
+        return { ...video, engagement };
+      }).sort((a, b) => b.engagement - a.engagement);
+      
+      if (analyzedVideos.length > 0) {
+        const topVideo = analyzedVideos[0];
+        const topVideoViews = parseInt(topVideo.statistics.viewCount || '0');
+        const topVideoLikes = parseInt(topVideo.statistics.likeCount || '0');
+        const topVideoComments = parseInt(topVideo.statistics.commentCount || '0');
+        
+        // Add video-specific insights
+        if (analyzedVideos.length >= 2) {
+          insights[0].items.push(
+            `Your most engaging video has a ${(topVideoLikes / topVideoViews * 100).toFixed(1)}% like ratio. Consider creating similar content.`
+          );
+        }
+        
+        if (analyzedVideos.length >= 3) {
+          // Analyze video durations
+          const durations = videoStats.items.map(video => {
+            const duration = video.contentDetails?.duration || 'PT0S';
+            const matches = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!matches) return 0;
+            const hours = parseInt(matches[1] || '0');
+            const minutes = parseInt(matches[2] || '0');
+            const seconds = parseInt(matches[3] || '0');
+            return hours * 3600 + minutes * 60 + seconds;
+          });
+          
+          const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
+          
+          insights[2].items.push(
+            `Your videos are averaging ${Math.floor(avgDuration / 60)} minutes in length. ${avgDuration > 600 ? 'Consider creating shorter, more focused content.' : 'This is a good length for engagement.'}`
+          );
+        }
+      }
+    }
+    
+    // Add more retention insights
+    insights[2].items.push(
+      `Adding timestamps to longer videos could improve retention by up to 18%.`,
+      `Using a consistent intro that's less than 10 seconds can help establish your brand without losing viewer attention.`
+    );
+    
+    // If the channel is very small, add more specific advice
+    if (subscriberCount < 100) {
+      insights[1].items.push(
+        `For channels under 100 subscribers, focus on sharing your content on social media to gain initial traction.`
+      );
+    } else if (subscriberCount < 1000) {
+      insights[1].items.push(
+        `Channels with ${subscriberCount} subscribers should focus on a consistent upload schedule to build viewer habits.`
+      );
+    }
+  } else {
+    // Fallback insights if no channel data
+    insights[0].items = [
+      "Focus on creating content that answers specific questions in your niche to attract search traffic.",
+      "Analyze your competition by looking at their most popular videos and identify content gaps you can fill.",
+      "Create a content calendar to help maintain a consistent posting schedule (at least once a week recommended)."
+    ];
+    
+    insights[1].items = [
+      "Collaborate with other YouTubers in similar niches to tap into each other's audiences.",
+      "Share your content on relevant social media platforms and communities where your target audience gathers.",
+      "Respond to all comments on your videos within 24 hours to boost engagement and build community."
+    ];
+    
+    insights[2].items = [
+      "Keep your intro short (less than 10 seconds) to prevent viewers from clicking away.",
+      "Use pattern interrupts every 60-90 seconds to maintain viewer attention (change scenes, graphics, etc).",
+      "Create a strong call-to-action at the end of each video to encourage likes, comments and subscriptions."
+    ];
+  }
+  
+  return insights;
+}
