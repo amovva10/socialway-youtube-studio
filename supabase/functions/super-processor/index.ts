@@ -15,7 +15,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const { query, videoId } = await req.json();
+  // Parse the request body
+  const requestData = await req.json();
+  const { query, videoId } = requestData;
+
+  console.log("Request data:", requestData);
 
   try {
     // Handle video insights request
@@ -105,12 +109,14 @@ serve(async (req) => {
         title: videoSnippet.title
       };
       
+      console.log("Returning insights:", insights);
+      
       return new Response(JSON.stringify(insights), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
-    // Handle search request (existing functionality)
+    // Handle search request
     if (query) {
       console.log(`Searching YouTube for: ${query}`);
       
@@ -124,7 +130,7 @@ serve(async (req) => {
       
       const data = await response.json();
       
-      const videos = data.items.map((item: any) => ({
+      const videos = data.items.map((item) => ({
         title: item.snippet.title,
         thumbnail: item.snippet.thumbnails.medium.url,
         videoId: item.id.videoId
@@ -135,7 +141,7 @@ serve(async (req) => {
       });
     }
     
-    return new Response(JSON.stringify({ error: 'Invalid request' }), {
+    return new Response(JSON.stringify({ error: 'Missing query or videoId' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
