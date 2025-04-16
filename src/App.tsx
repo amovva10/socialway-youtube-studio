@@ -10,6 +10,7 @@ import YoutubeConnected from "./pages/YoutubeConnected";
 import ContentGenerator from "./pages/ContentGenerator";
 import Upload from "./pages/Upload";
 import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings"; // Add this import
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/youtube-connected" element={<YoutubeConnected />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/settings" element={<Settings />} /> {/* Add this route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
