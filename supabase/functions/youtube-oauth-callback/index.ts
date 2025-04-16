@@ -126,21 +126,24 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
-    // Redirect to the success page with channel information
-    const frontendBaseUrl = url.origin.includes('localhost') 
-      ? 'http://localhost:3000' 
-      : url.origin
+    // Create an absolute URL for the redirect
+    const redirectToUrl = new URL(url.origin.includes('localhost') 
+      ? 'http://localhost:3000/youtube-connected' 
+      : 'https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com/youtube-connected')
+    
+    // Add query parameters with channel information
+    redirectToUrl.searchParams.set('channel', channel)
+    redirectToUrl.searchParams.set('id', channelId)
+    redirectToUrl.searchParams.set('thumbnail', thumbnailUrl)
 
-    const redirectUrl = new URL('/youtube-connected', frontendBaseUrl)
-    redirectUrl.searchParams.set('channel', channel)
-    redirectUrl.searchParams.set('id', channelId)
-    redirectUrl.searchParams.set('thumbnail', thumbnailUrl)
+    console.log('Redirecting to:', redirectToUrl.toString())
 
+    // Redirect to the success page
     return new Response(null, {
       status: 302,
       headers: {
         ...corsHeaders,
-        'Location': redirectUrl.toString(),
+        'Location': redirectToUrl.toString(),
       },
     })
 
