@@ -12,7 +12,7 @@ export const ConnectButton = () => {
   const handleConnect = async () => {
     setIsLoading(true);
     try {
-      // Use a verified Web Application OAuth 2.0 client ID
+      // The client ID must exactly match what's configured in Google Cloud Console
       const CLIENT_ID = "458582647832-g8r7pislak878j333hdl0uhei73hbqbq.apps.googleusercontent.com";
       
       // Build the OAuth URL with the properly encoded parameters
@@ -24,7 +24,12 @@ export const ConnectButton = () => {
         "https://www.googleapis.com/auth/youtube.force-ssl"
       ].join(" "));
 
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true`;
+      // Use state parameter to improve security
+      const state = Math.random().toString(36).substring(2);
+      // Store state in localStorage to verify when the callback returns
+      localStorage.setItem('oauthState', state);
+
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}`;
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
       window.open(oauthUrl, '_blank');

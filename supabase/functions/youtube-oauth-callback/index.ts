@@ -17,8 +17,10 @@ Deno.serve(async (req) => {
     const url = new URL(req.url)
     const code = url.searchParams.get('code')
     const error = url.searchParams.get('error')
+    const state = url.searchParams.get('state')
 
     console.log('Received callback with code:', code ? 'present' : 'missing')
+    console.log('State parameter:', state || 'missing')
     
     // Check if there's an error in the callback
     if (error) {
