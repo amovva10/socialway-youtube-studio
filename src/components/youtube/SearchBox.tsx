@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ interface VideoInsights {
   likes: number;
   publishDate?: string;
   engagementRate?: string;
+  title?: string;
 }
 
 export const SearchBox = () => {
@@ -77,104 +79,32 @@ export const SearchBox = () => {
     }
   };
 
-  const generateRealisticInsights = (videoId: string): VideoInsights => {
-    // Generate different insights patterns based on video ID to ensure consistency
-    const videoIdSum = videoId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-    const seed = videoIdSum % 100; // Use video ID as a consistent seed for values
-    
-    // Video age affects views (newer videos have fewer views)
-    const isPopular = seed > 70;
-    const isViral = seed > 90;
-    const isNew = seed < 30;
-    
-    // Views calculations
-    let views = 0;
-    if (isViral) {
-      views = 1000000 + (seed * 500000);
-    } else if (isPopular) {
-      views = 100000 + (seed * 10000);
-    } else if (isNew) {
-      views = 1000 + (seed * 100);
-    } else {
-      views = 10000 + (seed * 1000);
-    }
-    
-    // Calculate engagement metrics (likes, comments)
-    const likeRatio = 0.02 + (seed / 1000); // 2-12% like ratio
-    const commentRatio = 0.002 + (seed / 10000); // 0.2-1.2% comment ratio
-    
-    const likes = Math.floor(views * likeRatio);
-    const comments = Math.floor(views * commentRatio);
-    
-    // Demographics are influenced by video topic/style
-    let demographics = '';
-    if (seed < 25) {
-      demographics = 'United States (52%), UK (18%), Canada (12%), Australia (8%)';
-    } else if (seed < 50) {
-      demographics = 'United States (38%), India (24%), UK (10%), Germany (8%)';
-    } else if (seed < 75) {
-      demographics = 'India (35%), United States (25%), Brazil (15%), Japan (10%)';
-    } else {
-      demographics = 'United States (30%), Japan (20%), South Korea (15%), UK (10%)';
-    }
-    
-    // Calculate publish date (between 1 month and 3 years ago)
-    const now = new Date();
-    const ageInDays = isNew ? 
-      Math.floor(seed / 3) : // New: 0-33 days old
-      Math.floor(30 + (seed * 10)); // Older: 30 days to ~3 years
-    
-    const publishDate = new Date(now);
-    publishDate.setDate(now.getDate() - ageInDays);
-    
-    // Determine trend based on various factors
-    let trend: 'up' | 'down' | 'stable';
-    if (isNew && seed > 50) {
-      trend = 'up'; // New content with good seed is trending up
-    } else if (isPopular && seed % 3 === 0) {
-      trend = 'up'; // Some popular content is still trending
-    } else if (seed < 20 || (seed > 70 && seed < 80)) {
-      trend = 'down'; // Some content is declining
-    } else {
-      trend = 'stable'; // Most content stabilizes
-    }
-    
-    // Calculate engagement rate (likes + comments / views)
-    const engagementRate = ((likes + comments) / views * 100).toFixed(1) + '%';
-    
-    return {
-      views,
-      comments,
-      likes,
-      demographics,
-      trend,
-      publishDate: publishDate.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      }),
-      engagementRate
-    };
-  };
-
   const handleViewInsights = async (videoId: string) => {
     setSelectedVideo(videoId);
     setInsightsLoading(true);
     
     try {
-      // Simulate API call delay
-      setTimeout(() => {
-        const insights = generateRealisticInsights(videoId);
-        setVideoInsights(insights);
-        setInsightsLoading(false);
-      }, 800);
+      // Fetch real insights from the YouTube API
+      const { data, error } = await supabase.functions.invoke('super-processor', {
+        body: { videoId }
+      });
+      
+      if (error) {
+        console.error("Failed to fetch video insights:", error);
+        throw error;
+      }
+      
+      console.log("Video insights:", data);
+      setVideoInsights(data);
     } catch (error) {
-      console.error("Failed to generate video insights:", error);
+      console.error("Failed to fetch video insights:", error);
       toast({
         title: "Error",
         description: "Failed to load video insights. Please try again later.",
         variant: "destructive",
       });
+      setVideoInsights(null);
+    } finally {
       setInsightsLoading(false);
     }
   };
@@ -242,7 +172,7 @@ export const SearchBox = () => {
           <DialogHeader>
             <DialogTitle>Video Insights</DialogTitle>
             <DialogDescription>
-              Analytics for the selected video
+              Analytics for {videoInsights?.title ? `"${videoInsights.title}"` : 'the selected video'}
             </DialogDescription>
           </DialogHeader>
           
