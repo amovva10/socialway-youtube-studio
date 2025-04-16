@@ -5,6 +5,7 @@ import { ConnectButton } from "@/components/youtube/ConnectButton";
 import { UploadForm } from "@/components/youtube/UploadForm";
 import { VideoGrid } from "@/components/youtube/VideoGrid";
 import { AnalyticsPanel } from "@/components/youtube/AnalyticsPanel";
+import { SearchBox } from "@/components/youtube/SearchBox";
 
 const Index = () => {
   return (
@@ -16,6 +17,11 @@ const Index = () => {
           <div className="flex justify-center">
             <ConnectButton />
           </div>
+          
+          <section>
+            <h2 className="text-xl font-semibold mb-6">Search YouTube</h2>
+            <SearchBox />
+          </section>
           
           <section>
             <h2 className="text-xl font-semibold mb-6">Analytics Overview</h2>
