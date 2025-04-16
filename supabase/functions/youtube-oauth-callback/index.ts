@@ -1,9 +1,10 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 // Define CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-deno-subhost',
 }
 
 // Deno edge function to handle YouTube OAuth callback
@@ -28,7 +29,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: `Authentication failed: ${error}` }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-deno-subhost': 'fhoydbjcneodbgepfyho' }
         }
       )
     }
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'No authorization code received' }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-deno-subhost': 'fhoydbjcneodbgepfyho' }
         }
       )
     }
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Server configuration error: Missing OAuth credentials' }),
         { 
           status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-deno-subhost': 'fhoydbjcneodbgepfyho' }
         }
       )
     }
@@ -84,6 +85,7 @@ Deno.serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'x-deno-subhost': 'fhoydbjcneodbgepfyho'
       },
       body: tokenRequestBody,
     })
@@ -102,7 +104,7 @@ Deno.serve(async (req) => {
         }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-deno-subhost': 'fhoydbjcneodbgepfyho' }
         }
       )
     }
@@ -111,6 +113,7 @@ Deno.serve(async (req) => {
     const youtubeResponse = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
       headers: {
         Authorization: `Bearer ${tokenData.access_token}`,
+        'x-deno-subhost': 'fhoydbjcneodbgepfyho'
       },
     })
 
@@ -119,17 +122,20 @@ Deno.serve(async (req) => {
 
     const channel = channelData.items?.[0]?.snippet?.title || 'Unknown';
     const channelId = channelData.items?.[0]?.id || 'Unknown';
+    const thumbnailUrl = channelData.items?.[0]?.snippet?.thumbnails?.default?.url || '';
 
     // Redirect to the success page with channel information
     const redirectUrl = new URL('/youtube-connected', req.url);
     redirectUrl.searchParams.set('channel', channel);
     redirectUrl.searchParams.set('id', channelId);
+    redirectUrl.searchParams.set('thumbnail', thumbnailUrl);
 
     return new Response(null, {
       status: 302,
       headers: {
         ...corsHeaders,
         'Location': redirectUrl.toString(),
+        'x-deno-subhost': 'fhoydbjcneodbgepfyho'
       },
     });
 
@@ -139,7 +145,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-deno-subhost': 'fhoydbjcneodbgepfyho' }
       }
     )
   }
