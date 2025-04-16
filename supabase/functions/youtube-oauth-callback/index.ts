@@ -46,9 +46,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get the client ID and client secret from environment variables
-    const clientId = Deno.env.get('CLIENT_ID')
-    const clientSecret = Deno.env.get('CLIENT_SECRET')
+    // Hardcoded client ID and secret for development
+    // In production, these would be securely stored and retrieved
+    const clientId = "458582647832-g8r7pislak878j333hdl0uhei73hbqbq.apps.googleusercontent.com"
+    const clientSecret = "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"
     
     if (!clientId || !clientSecret) {
       console.error('Missing OAuth credentials')
@@ -64,7 +65,6 @@ Deno.serve(async (req) => {
     }
 
     console.log('Using client ID:', clientId.substring(0, 5) + '...')
-    console.log('Client secret is defined:', !!clientSecret)
     
     const redirectUri = 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback'
     console.log('Using redirect URI:', redirectUri)
