@@ -28,25 +28,30 @@ export const AnalyticsPanel = () => {
       
       if (channelInfo.accessToken) {
         setAccessToken(channelInfo.accessToken);
+        console.log('Found access token in storage, will use for API calls');
       } else {
         console.log('No access token found in storage');
       }
       
       // Fetch real analytics data from YouTube API
-      fetchAnalytics();
+      fetchAnalytics(channelInfo.accessToken);
     }
   }, [isConnected]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (token) => {
     setLoading(true);
     
     try {
-      // Since we don't have a valid token stored locally yet, we'll use mock data for display purposes
-      // In a real implementation, we would use the stored access token from localStorage
+      // Determine if we should use real or simulated data
+      const useSimulatedData = !token;
+      
+      console.log(`Fetching analytics with ${useSimulatedData ? 'simulated' : 'real'} data`);
+      
       const { data, error } = await supabase.functions.invoke('super-processor', {
         body: {
           action: 'channel-analytics',
-          useSimulatedData: true // Flag to use simulated data for now
+          useSimulatedData: useSimulatedData,
+          accessToken: token
         }
       });
       
@@ -64,8 +69,10 @@ export const AnalyticsPanel = () => {
         ]);
         
         toast({
-          title: "Analytics Loaded",
-          description: "Your channel analytics have been loaded successfully",
+          title: useSimulatedData ? "Sample Data Loaded" : "Analytics Loaded",
+          description: useSimulatedData 
+            ? "Connected, but using sample data. Reconnect to get real analytics." 
+            : "Your YouTube channel analytics have been loaded successfully",
         });
       }
     } catch (error) {

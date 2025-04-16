@@ -1,3 +1,4 @@
+
 // Deno edge function to handle YouTube search and video insights
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -63,7 +64,7 @@ serve(async (req) => {
         });
       }
       
-      // Get channel statistics with real token (for future implementation)
+      // Get channel statistics with real token
       if (!accessToken) {
         throw new Error('No access token provided');
       }
@@ -92,6 +93,8 @@ serve(async (req) => {
         const channel = channelData.items[0];
         const stats = channel.statistics;
         
+        console.log("Retrieved real channel stats:", stats);
+        
         // For comparison data, we'll simulate a percentage change
         const getRandom = () => {
           const sign = Math.random() > 0.5 ? '+' : '';
@@ -117,7 +120,7 @@ serve(async (req) => {
           }
         };
         
-        console.log("Returning analytics:", analytics);
+        console.log("Returning real analytics:", analytics);
         
         return new Response(JSON.stringify(analytics), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }

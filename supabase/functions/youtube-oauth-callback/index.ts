@@ -135,6 +135,7 @@ Deno.serve(async (req) => {
     redirectToUrl.searchParams.set('channel', channel)
     redirectToUrl.searchParams.set('id', channelId)
     redirectToUrl.searchParams.set('thumbnail', thumbnailUrl)
+    redirectToUrl.searchParams.set('access_token', tokenData.access_token)
 
     console.log('Redirecting to:', redirectToUrl.toString())
 
