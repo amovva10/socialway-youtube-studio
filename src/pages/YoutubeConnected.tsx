@@ -22,6 +22,8 @@ const YoutubeConnected = () => {
         thumbnail: thumbnailUrl,
         connected: true
       }));
+      
+      console.log('YouTube channel info saved:', { channelName, channelId, hasThumbnail: !!thumbnailUrl });
     }
     
     const timer = setInterval(() => {

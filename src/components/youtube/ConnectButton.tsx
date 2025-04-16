@@ -13,6 +13,7 @@ export const ConnectButton = () => {
     setIsLoading(true);
     try {
       // The client ID must exactly match what's configured in Google Cloud Console
+      // This client ID must be registered in Google Cloud Console with the correct redirect URI
       const CLIENT_ID = "458582647832-g8r7pislak878j333hdl0uhei73hbqbq.apps.googleusercontent.com";
       
       // Build the OAuth URL with the properly encoded parameters
@@ -32,6 +33,7 @@ export const ConnectButton = () => {
       const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}`;
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
+      console.log("Using redirect URI:", redirectUri);
       window.open(oauthUrl, '_blank');
       
       toast({

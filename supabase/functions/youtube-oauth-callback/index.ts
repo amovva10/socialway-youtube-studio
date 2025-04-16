@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Use verified client ID and secret
+    // Use verified client ID and secret - these must match what's configured in Google Cloud Console
     const clientId = "458582647832-g8r7pislak878j333hdl0uhei73hbqbq.apps.googleusercontent.com"
     const clientSecret = "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"
     
@@ -118,6 +118,12 @@ Deno.serve(async (req) => {
     const channel = channelData.items?.[0]?.snippet?.title || 'Unknown'
     const channelId = channelData.items?.[0]?.id || 'Unknown'
     const thumbnailUrl = channelData.items?.[0]?.snippet?.thumbnails?.default?.url || ''
+
+    console.log('Successfully retrieved channel info:', {
+      channel,
+      channelId,
+      hasThumbnail: !!thumbnailUrl
+    })
 
     // Redirect to the success page with channel information
     const redirectUrl = new URL('/youtube-connected', req.url)
