@@ -1,7 +1,6 @@
 
 import { Youtube } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 export const ConnectButton = () => {
@@ -51,12 +50,12 @@ export const ConnectButton = () => {
   };
 
   return (
-    <Button 
+    <button 
       onClick={handleConnect}
-      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+      className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg hover:shadow-blue-200 transition-all duration-200 transform hover:-translate-y-0.5"
     >
-      <Youtube className="mr-2" size={20} />
-      Connect YouTube Channel
-    </Button>
+      <Youtube size={24} />
+      <span className="font-semibold">Connect YouTube Channel</span>
+    </button>
   );
 };
