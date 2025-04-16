@@ -9,7 +9,10 @@ export const ConnectButton = () => {
   const handleConnect = async () => {
     try {
       const { data: { CLIENT_ID }, error: secretError } = await supabase.functions.invoke('get-secret', {
-        body: { secretName: 'CLIENT_ID' }
+        body: { secretName: 'CLIENT_ID' },
+        headers: {
+          'x-deno-subhost': 'fhoydbjcneodbgepfyho'
+        }
       });
 
       if (secretError) {
