@@ -1,15 +1,19 @@
 
 import { useState, useEffect } from 'react';
-import { Upload, AlertTriangle } from 'lucide-react';
+import { Upload, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ConnectButton } from './ConnectButton';
+import { supabase } from "@/integrations/supabase/client";
 
 export const UploadForm = () => {
   const { toast } = useToast();
   const [isConnected, setIsConnected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [accessToken, setAccessToken] = useState('');
+  const [uploadedVideoId, setUploadedVideoId] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -22,6 +26,10 @@ export const UploadForm = () => {
     const channelInfo = JSON.parse(localStorage.getItem('youtubeChannel') || '{}');
     if (channelInfo.connected) {
       setIsConnected(true);
+      if (channelInfo.accessToken) {
+        setAccessToken(channelInfo.accessToken);
+        console.log('Found access token for uploads');
+      }
     }
   }, []);
 
@@ -47,20 +55,54 @@ export const UploadForm = () => {
       });
       return;
     }
+
+    if (!accessToken) {
+      toast({
+        title: "Authentication Error",
+        description: "No access token found. Please reconnect your YouTube account.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsSubmitting(true);
+    setUploadProgress(10); // Start progress
     
     try {
-      // In a real implementation, this would upload to YouTube API
-      // For now, we'll simulate a successful upload
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create form data for the upload
+      const form = new FormData();
+      form.append('videoFile', videoFile);
+      form.append('title', formData.title);
+      form.append('description', formData.description);
+      form.append('tags', formData.tags);
+      form.append('privacy', formData.privacy);
+      form.append('accessToken', accessToken);
+      
+      // Update progress to show we're starting the upload
+      setUploadProgress(25);
+      
+      console.log('Starting YouTube upload...');
+      const { data, error } = await supabase.functions.invoke('youtube-upload', {
+        body: form,
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Upload failed');
+      }
+      
+      setUploadProgress(100);
+      setUploadedVideoId(data.videoId);
       
       toast({
         title: "Upload Successful",
         description: `Your video "${formData.title}" has been uploaded to YouTube`,
       });
       
-      // Reset form
+      // Reset form after successful upload
       setFormData({
         title: '',
         description: '',
@@ -78,9 +120,10 @@ export const UploadForm = () => {
       console.error("Error uploading video:", error);
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your video. Please try again.",
+        description: error.message || "There was an error uploading your video. Please try again.",
         variant: "destructive"
       });
+      setUploadProgress(0);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,6 +148,31 @@ export const UploadForm = () => {
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <h2 className="text-xl font-semibold mb-6">Upload New Video</h2>
+      
+      {uploadedVideoId && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 bg-green-100 p-1 rounded-full">
+              <Upload className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="font-medium text-green-800">Video Successfully Uploaded!</h3>
+              <p className="text-green-700 text-sm mt-1">
+                Your video has been uploaded to YouTube with ID: {uploadedVideoId}
+              </p>
+              <a 
+                href={`https://www.youtube.com/watch?v=${uploadedVideoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-sm text-green-700 hover:text-green-800 mt-2"
+              >
+                View on YouTube <ExternalLink className="ml-1 h-3 w-3" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="video-file">
@@ -217,16 +285,15 @@ export const UploadForm = () => {
           </select>
         </div>
         
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
-            <p>
-              This is a simulated upload. In a real implementation, this would connect to the YouTube API to
-              upload your video directly. The OAuth integration is set up, but the actual upload functionality
-              requires server-side implementation.
-            </p>
+        {isSubmitting && uploadProgress > 0 && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+            <p className="text-sm text-gray-500 mt-1 text-right">{uploadProgress}% Complete</p>
           </div>
-        </div>
+        )}
         
         <Button
           type="submit"
@@ -236,15 +303,25 @@ export const UploadForm = () => {
           {isSubmitting ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span>Uploading...</span>
+              <span>Uploading to YouTube...</span>
             </>
           ) : (
             <>
               <Upload size={20} />
-              <span>Upload Video</span>
+              <span>Upload to YouTube</span>
             </>
           )}
         </Button>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800 text-sm">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+            <p>
+              This upload uses the YouTube Data API v3. Please make sure your OAuth credentials have the correct scopes enabled,
+              including <code className="bg-blue-100 px-1 py-0.5 rounded text-xs">https://www.googleapis.com/auth/youtube.upload</code>.
+            </p>
+          </div>
+        </div>
       </form>
     </div>
   );

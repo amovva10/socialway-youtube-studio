@@ -26,3 +26,7 @@ verify_jwt = false
 # Configures the get-youtube-client-id function to be public
 [functions.get-youtube-client-id]
 verify_jwt = false
+
+# Configures the youtube-upload function to be public
+[functions.youtube-upload]
+verify_jwt = false
