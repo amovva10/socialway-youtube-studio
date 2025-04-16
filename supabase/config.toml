@@ -3,3 +3,6 @@ project_id = "fhoydbjcneodbgepfyho"
 
 [functions.get-secret]
 verify_jwt = true
+
+[functions.youtube-oauth-callback]
+verify_jwt = false
