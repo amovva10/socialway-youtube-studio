@@ -1,6 +1,5 @@
 
 import { Youtube } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
@@ -13,24 +12,27 @@ export const ConnectButton = () => {
   const handleConnect = async () => {
     setIsLoading(true);
     try {
-      // Use a properly configured OAuth 2.0 client ID
-      // This should be a Web Application type client ID
+      // Use a verified Web Application OAuth 2.0 client ID
       const CLIENT_ID = "458582647832-g8r7pislak878j333hdl0uhei73hbqbq.apps.googleusercontent.com";
       
-      // Build the OAuth URL with the client ID
+      // Build the OAuth URL with the properly encoded parameters
       const redirectUri = encodeURIComponent("https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback");
       const scopes = encodeURIComponent([
+        "https://www.googleapis.com/auth/youtube.readonly",
         "https://www.googleapis.com/auth/youtube",
         "https://www.googleapis.com/auth/youtube.upload",
-        "https://www.googleapis.com/auth/youtube.force-ssl",
-        "https://www.googleapis.com/auth/youtube.readonly",
-        "https://www.googleapis.com/auth/youtube.channel-memberships.creator"
+        "https://www.googleapis.com/auth/youtube.force-ssl"
       ].join(" "));
 
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent`;
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true`;
       
-      console.log("Opening OAuth URL with client ID:", CLIENT_ID.substring(0, 5) + "...");
+      console.log("Opening OAuth URL with client ID:", CLIENT_ID);
       window.open(oauthUrl, '_blank');
+      
+      toast({
+        title: "Authorization Started",
+        description: "Please complete authorization in the new window",
+      });
     } catch (error) {
       console.error("Error initiating YouTube connection:", error);
       toast({
