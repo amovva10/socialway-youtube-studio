@@ -52,6 +52,8 @@ Deno.serve(async (req) => {
     
     if (!clientId || !clientSecret) {
       console.error('Missing OAuth credentials')
+      console.error('Client ID present:', !!clientId)
+      console.error('Client Secret present:', !!clientSecret)
       return new Response(
         JSON.stringify({ error: 'Server configuration error: Missing OAuth credentials' }),
         { 
@@ -63,17 +65,20 @@ Deno.serve(async (req) => {
 
     console.log('Using client ID:', clientId.substring(0, 5) + '...')
     console.log('Client secret is defined:', !!clientSecret)
+    
+    const redirectUri = 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback'
+    console.log('Using redirect URI:', redirectUri)
 
     // Create the token exchange request body
     const tokenRequestBody = new URLSearchParams({
       code,
       client_id: clientId,
       client_secret: clientSecret,
-      redirect_uri: 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback',
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     }).toString()
 
-    console.log('Token request prepared with redirect URI:', 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback')
+    console.log('Token request prepared')
 
     // Exchange the authorization code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
