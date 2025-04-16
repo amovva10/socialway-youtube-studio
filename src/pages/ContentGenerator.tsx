@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
@@ -24,17 +23,14 @@ const ContentGenerator = () => {
 
     setLoading(true)
     try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate', {
+        body: {
           prompt: prompt,
           systemPrompt: getSystemPrompt(type)
-        }),
+        },
       })
 
-      const data = await response.json()
-      if (data.error) throw new Error(data.error)
+      if (error) throw new Error(error.message)
       
       setResult(data.generatedText)
       toast({
@@ -42,6 +38,7 @@ const ContentGenerator = () => {
         description: `${type.charAt(0).toUpperCase() + type.slice(1)} generated successfully!`,
       })
     } catch (error) {
+      console.error("Generation error:", error)
       toast({
         title: "Error",
         description: "Failed to generate content. Please try again.",
