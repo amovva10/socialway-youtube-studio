@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface SearchResult {
   videos: Array<{
@@ -17,21 +18,48 @@ export const SearchBox = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<SearchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      toast({
+        title: "Empty search",
+        description: "Please enter a search term",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      console.log("Searching for:", searchQuery);
       const { data, error } = await supabase.functions.invoke('super-processor', {
         body: { query: searchQuery }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw error;
+      }
+
+      console.log("Search response:", data);
       setResults(data || null);
     } catch (error) {
       console.error("Search failed:", error);
+      toast({
+        title: "Search failed",
+        description: "The search service is currently unavailable. Please try again later.",
+        variant: "destructive",
+      });
       setResults(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
@@ -43,6 +71,7 @@ export const SearchBox = () => {
           placeholder="Search YouTube videos..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={handleKeyPress}
           className="flex-1"
         />
         <Button 
