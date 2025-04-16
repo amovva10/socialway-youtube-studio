@@ -46,9 +46,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Use verified client ID and secret - these must match what's configured in Google Cloud Console
-    const clientId = "458582647832-g8r7pislak878j333hdl0uhei73hbqbq.apps.googleusercontent.com"
-    const clientSecret = "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"
+    // Get client ID and secret from environment variables
+    const clientId = Deno.env.get("CLIENT_ID")
+    const clientSecret = Deno.env.get("CLIENT_SECRET")
     
     if (!clientId || !clientSecret) {
       console.error('Missing OAuth credentials')
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('Using client ID:', clientId)
+    console.log('Using client ID from environment variable')
     
     const redirectUri = 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback'
     console.log('Using redirect URI:', redirectUri)

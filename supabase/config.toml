@@ -22,3 +22,7 @@ port = 54323
 # Configures the YouTube OAuth callback function to be public
 [functions.youtube-oauth-callback]
 verify_jwt = false
+
+# Configures the get-youtube-client-id function to be public
+[functions.get-youtube-client-id]
+verify_jwt = false

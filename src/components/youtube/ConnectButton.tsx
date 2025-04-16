@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ConnectButton = () => {
   const { toast } = useToast();
@@ -12,9 +13,18 @@ export const ConnectButton = () => {
   const handleConnect = async () => {
     setIsLoading(true);
     try {
-      // The client ID must exactly match what's configured in Google Cloud Console
-      // This client ID must be registered in Google Cloud Console with the correct redirect URI
-      const CLIENT_ID = "458582647832-g8r7pislak878j333hdl0uhei73hbqbq.apps.googleusercontent.com";
+      // Get client ID from Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('get-youtube-client-id');
+      
+      if (error) {
+        throw new Error(`Error getting client ID: ${error.message}`);
+      }
+      
+      const CLIENT_ID = data.clientId;
+      
+      if (!CLIENT_ID) {
+        throw new Error("No client ID returned from server");
+      }
       
       // Build the OAuth URL with the properly encoded parameters
       const redirectUri = encodeURIComponent("https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback");
