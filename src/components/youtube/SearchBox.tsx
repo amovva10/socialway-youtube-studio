@@ -6,14 +6,16 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SearchResult {
-  title: string;
-  thumbnail: string;
-  youtubeUrl: string;
+  videos: Array<{
+    title: string;
+    thumbnail: string;
+    videoId: string;
+  }>;
 }
 
 export const SearchBox = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<SearchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = async () => {
@@ -24,9 +26,10 @@ export const SearchBox = () => {
       });
       
       if (error) throw error;
-      setResults(data || []);
+      setResults(data || null);
     } catch (error) {
       console.error("Search failed:", error);
+      setResults(null);
     } finally {
       setIsLoading(false);
     }
@@ -50,19 +53,19 @@ export const SearchBox = () => {
         </Button>
       </div>
 
-      {results.length > 0 && (
+      {results?.videos && results.videos.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {results.map((result, index) => (
+          {results.videos.map((video, index) => (
             <Card key={index} className="overflow-hidden">
               <img
-                src={result.thumbnail}
-                alt={result.title}
+                src={video.thumbnail}
+                alt={video.title}
                 className="w-full aspect-video object-cover"
               />
               <div className="p-4">
-                <h3 className="font-medium mb-2 line-clamp-2">{result.title}</h3>
+                <h3 className="font-medium mb-2 line-clamp-2">{video.title}</h3>
                 <a
-                  href={result.youtubeUrl}
+                  href={`https://youtube.com/watch?v=${video.videoId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:text-blue-700 text-sm"
@@ -72,6 +75,10 @@ export const SearchBox = () => {
               </div>
             </Card>
           ))}
+        </div>
+      ) : results && (
+        <div className="text-center py-8 text-gray-500">
+          No videos found. Try a different search!
         </div>
       )}
     </div>
