@@ -38,14 +38,18 @@ serve(async (req) => {
       throw new Error('No video file provided');
     }
 
-    // Step 1: Create the video resource with metadata
-    const createVideoResponse = await fetch(
-      'https://www.googleapis.com/youtube/v3/videos?part=snippet,status',
+    // Upload the video using the resumable upload protocol
+    
+    // Step 1: Initiate the resumable upload session
+    const initResponse = await fetch(
+      'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Upload-Content-Type': videoFile.type,
+          'X-Upload-Content-Length': String(videoFile.size)
         },
         body: JSON.stringify({
           snippet: {
@@ -62,36 +66,78 @@ serve(async (req) => {
       }
     );
 
-    if (!createVideoResponse.ok) {
-      const errorData = await createVideoResponse.json();
-      console.error('YouTube API error (create):', errorData);
-      throw new Error(`YouTube API error: ${createVideoResponse.status}`);
+    if (!initResponse.ok) {
+      const errorText = await initResponse.text();
+      console.error('YouTube API error (init):', errorText);
+      throw new Error(`YouTube API init error: ${initResponse.status}`);
     }
 
-    const videoData = await createVideoResponse.json();
-    const videoId = videoData.id;
+    // Get the upload URL from the Location header
+    const uploadUrl = initResponse.headers.get('Location');
+    if (!uploadUrl) {
+      throw new Error('No upload URL returned from YouTube API');
+    }
 
-    console.log(`Successfully created video with ID: ${videoId}`);
+    console.log('Upload URL obtained:', uploadUrl);
 
-    // Step 2: Upload the video file
-    const uploadResponse = await fetch(
-      `https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status&videoId=${videoId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': videoFile.type,
-          'Content-Length': String(videoFile.size),
-          'X-Upload-Content-Type': videoFile.type
-        },
-        body: await videoFile.arrayBuffer()
-      }
-    );
+    // Step 2: Upload the video content to the session URL
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': videoFile.type,
+        'Content-Length': String(videoFile.size)
+      },
+      body: await videoFile.arrayBuffer()
+    });
 
     if (!uploadResponse.ok) {
-      const errorData = await uploadResponse.text();
-      console.error('YouTube API error (upload):', errorData);
+      const errorText = await uploadResponse.text();
+      console.error('YouTube API error (upload):', errorText);
       throw new Error(`YouTube API upload error: ${uploadResponse.status}`);
+    }
+
+    // Get the video ID from the upload response
+    let videoId = '';
+    let videoData;
+    
+    try {
+      videoData = await uploadResponse.json();
+      videoId = videoData.id;
+    } catch (e) {
+      // If the response is not JSON or doesn't have an ID, try to get it from the response
+      if (uploadResponse.status === 200) {
+        // Try to fetch the video details to get the ID
+        const videoInfoResponse = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=id&mine=true&maxResults=1`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          }
+        );
+        
+        if (videoInfoResponse.ok) {
+          const videoList = await videoInfoResponse.json();
+          if (videoList.items && videoList.items.length > 0) {
+            videoId = videoList.items[0].id;
+          }
+        }
+      }
+    }
+
+    if (!videoId) {
+      console.log('Upload was successful but could not determine video ID');
+      // Return success even without ID
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Video uploaded successfully, but could not determine video ID',
+        }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Return success response with video ID
