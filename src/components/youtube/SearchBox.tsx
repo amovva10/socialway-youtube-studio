@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -7,6 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, MessageSquare, TrendingUp, Users, ThumbsUp, Calendar } from "lucide-react";
+
+// Utility function to decode HTML entities
+const decodeHTMLEntities = (text: string) => {
+  const textArea = document.createElement('textarea');
+  textArea.innerHTML = text;
+  return textArea.value;
+};
 
 interface SearchResult {
   videos: Array<{
@@ -58,8 +64,13 @@ export const SearchBox = () => {
         throw error;
       }
 
-      console.log("Search response:", data);
-      setResults(data || null);
+      // Decode HTML entities in video titles
+      const processedVideos = data.videos.map((video: any) => ({
+        ...video,
+        title: decodeHTMLEntities(video.title)
+      }));
+
+      setResults({ videos: processedVideos });
     } catch (error) {
       console.error("Search failed:", error);
       toast({
