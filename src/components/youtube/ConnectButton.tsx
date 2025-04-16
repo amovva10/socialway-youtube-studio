@@ -8,7 +8,7 @@ export const ConnectButton = () => {
       body: { secretName: 'CLIENT_ID' }
     });
 
-    const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback&response_type=code&scope=https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.channel-memberships.creator https://www.googleapis.com/auth/youtube.partner&access_type=offline&prompt=consent`;
+    const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback&response_type=code&scope=https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.channel-memberships.creator&access_type=offline&prompt=consent`;
     
     window.open(oauthUrl, '_blank');
   };
