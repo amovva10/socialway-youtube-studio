@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 const ContentGenerator = () => {
   const [prompt, setPrompt] = useState("")
@@ -23,18 +24,12 @@ const ContentGenerator = () => {
 
     setLoading(true)
     try {
-      const systemPrompt = type === 'script' 
-        ? 'You are a professional video script writer. Write an engaging YouTube video script based on the topic.'
-        : type === 'title' 
-        ? 'You are a YouTube title optimization expert. Create an engaging, clickable title that follows best practices.'
-        : 'You are a YouTube thumbnail expert. Describe an eye-catching thumbnail design that will attract viewers.'
-
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: prompt,
-          systemPrompt: systemPrompt
+          systemPrompt: getSystemPrompt(type)
         }),
       })
 
@@ -54,6 +49,19 @@ const ContentGenerator = () => {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const getSystemPrompt = (type: string) => {
+    switch(type) {
+      case 'script':
+        return 'You are a professional video script writer. Write an engaging YouTube video script based on the topic.'
+      case 'title':
+        return 'You are a YouTube title optimization expert. Create an engaging, clickable title that follows best practices.'
+      case 'thumbnail':
+        return 'You are a YouTube thumbnail expert. Describe an eye-catching thumbnail design that will attract viewers.'
+      default:
+        return ''
     }
   }
 
