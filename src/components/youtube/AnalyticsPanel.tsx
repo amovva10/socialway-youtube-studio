@@ -1,39 +1,69 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, ThumbsUp, Clock, Users } from 'lucide-react';
+import { ConnectButton } from './ConnectButton';
+import { useToast } from "@/components/ui/use-toast";
 
 export const AnalyticsPanel = () => {
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const [isConnected, setIsConnected] = useState(false);
   
-  // Real applications would fetch this data from an API
+  // Stats state with real data structure
   const [stats, setStats] = useState([
-    { icon: Eye, label: 'Total Views', value: 'Loading...', change: '...' },
-    { icon: ThumbsUp, label: 'Total Likes', value: 'Loading...', change: '...' },
-    { icon: Clock, label: 'Watch Time', value: 'Loading...', change: '...' },
-    { icon: Users, label: 'Subscribers', value: 'Loading...', change: '...' }
+    { icon: Eye, label: 'Total Views', value: '0', change: '0%' },
+    { icon: ThumbsUp, label: 'Total Likes', value: '0', change: '0%' },
+    { icon: Clock, label: 'Watch Time', value: '0hrs', change: '0%' },
+    { icon: Users, label: 'Subscribers', value: '0', change: '0%' }
   ]);
 
   useEffect(() => {
-    // Simulating data loading
-    setLoading(true);
-    
-    // In a real app, this would be an API call to get actual analytics data
-    setTimeout(() => {
-      setStats([
-        { icon: Eye, label: 'Total Views', value: '0', change: '0%' },
-        { icon: ThumbsUp, label: 'Total Likes', value: '0', change: '0%' },
-        { icon: Clock, label: 'Watch Time', value: '0hrs', change: '0%' },
-        { icon: Users, label: 'Subscribers', value: '0', change: '0%' }
-      ]);
+    // Check if YouTube channel is connected
+    const channelInfo = JSON.parse(localStorage.getItem('youtubeChannel') || '{}');
+    if (channelInfo.connected) {
+      setIsConnected(true);
       
-      setLoading(false);
-    }, 1000);
-  }, []);
+      // Simulate fetching analytics data
+      // In a real app, this would use the YouTube Analytics API
+      setLoading(true);
+      
+      setTimeout(() => {
+        // Simulate successful data retrieval
+        toast({
+          title: "Analytics Loaded",
+          description: `Loaded analytics for channel: ${channelInfo.name}`,
+        });
+        
+        setStats([
+          { icon: Eye, label: 'Total Views', value: '1,234', change: '+12%' },
+          { icon: ThumbsUp, label: 'Total Likes', value: '432', change: '+8%' },
+          { icon: Clock, label: 'Watch Time', value: '213hrs', change: '+15%' },
+          { icon: Users, label: 'Subscribers', value: '56', change: '+5%' }
+        ]);
+        
+        setLoading(false);
+      }, 1000);
+    }
+  }, [isConnected, toast]);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 space-y-6">
+        <div className="text-center max-w-md space-y-3">
+          <h3 className="text-xl font-semibold text-gray-800">Connect Your YouTube Channel</h3>
+          <p className="text-gray-600">
+            Connect your YouTube channel to view analytics and upload videos directly from this dashboard.
+          </p>
+        </div>
+        <ConnectButton />
       </div>
     );
   }
@@ -50,7 +80,9 @@ export const AnalyticsPanel = () => {
             <div className="flex items-end justify-between">
               <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
               {stat.change && (
-                <span className="text-sm text-gray-500">{stat.change}</span>
+                <span className={`text-sm ${stat.change.startsWith('+') ? 'text-green-500' : 'text-gray-500'}`}>
+                  {stat.change}
+                </span>
               )}
             </div>
           </div>

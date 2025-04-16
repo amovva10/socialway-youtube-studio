@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Lightbulb, TrendingUp, Users, Clock, ExternalLink } from 'lucide-react';
+import { ConnectButton } from './ConnectButton';
 
 export const AIInsightsPanel = () => {
   const [loading, setLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   
   // In a real app, these would come from an API call
   const insights = [
@@ -39,19 +41,37 @@ export const AIInsightsPanel = () => {
   ];
 
   useEffect(() => {
-    // Simulating data loading
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    // Check if YouTube channel is connected
+    const channelInfo = JSON.parse(localStorage.getItem('youtubeChannel') || '{}');
+    if (channelInfo.connected) {
+      setIsConnected(true);
+      setLoading(true);
+      
+      // Simulate loading AI insights
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    }
   }, []);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 space-y-6">
+        <div className="text-center max-w-md space-y-3">
+          <h3 className="text-xl font-semibold text-gray-800">Connect Your YouTube Channel</h3>
+          <p className="text-gray-600">
+            Connect your YouTube channel to get AI-powered insights on how to grow your audience.
+          </p>
+        </div>
+        <ConnectButton />
       </div>
     );
   }
