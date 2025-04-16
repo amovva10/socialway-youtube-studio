@@ -1,7 +1,6 @@
 
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { VideoGrid } from "@/components/youtube/VideoGrid";
 import { AnalyticsPanel } from "@/components/youtube/AnalyticsPanel";
 import { SearchBox } from "@/components/youtube/SearchBox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,12 +31,12 @@ const Index = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                  <BarChart2 className="h-5 w-5" />
-                  Quick Analytics
+                  <Search className="h-5 w-5" />
+                  Search YouTube
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <AnalyticsPanel />
+                <SearchBox />
               </CardContent>
             </Card>
           </section>
@@ -46,12 +45,12 @@ const Index = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                  <Search className="h-5 w-5" />
-                  Search YouTube
+                  <BarChart2 className="h-5 w-5" />
+                  Quick Analytics
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <SearchBox />
+                <AnalyticsPanel />
               </CardContent>
             </Card>
           </section>
