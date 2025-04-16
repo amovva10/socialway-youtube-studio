@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import YoutubeConnected from "./pages/YoutubeConnected";
 import ContentGenerator from "./pages/ContentGenerator";
+import Upload from "./pages/Upload";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/generator" element={<ContentGenerator />} />
           <Route path="/youtube-connected" element={<YoutubeConnected />} />
+          <Route path="/upload" element={<Upload />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

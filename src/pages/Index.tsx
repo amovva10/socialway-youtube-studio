@@ -1,10 +1,12 @@
+
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { VideoGrid } from "@/components/youtube/VideoGrid";
 import { AnalyticsPanel } from "@/components/youtube/AnalyticsPanel";
 import { SearchBox } from "@/components/youtube/SearchBox";
-import { UploadForm } from "@/components/youtube/UploadForm";
 import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Activity, Rocket } from "lucide-react";
 
 const Index = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -28,29 +30,54 @@ const Index = () => {
       <div className="flex-1 flex flex-col">
         <Header />
         <main className="flex-1 p-6 space-y-8 overflow-auto">
-          {!isConnected && (
-            <div className="flex justify-center">
-            </div>
-          )}
+          <div className="grid grid-cols-1 gap-6">
+            <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h1 className="text-2xl font-bold mb-2">YouTube Dashboard</h1>
+                    <p className="opacity-90">Search and analyze YouTube videos with AI-powered insights</p>
+                  </div>
+                  <Rocket size={48} className="opacity-75" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
           
           <section>
-            <h2 className="text-xl font-semibold mb-6">Search YouTube</h2>
-            <SearchBox />
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Analytics Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AnalyticsPanel />
+              </CardContent>
+            </Card>
           </section>
           
           <section>
-            <h2 className="text-xl font-semibold mb-6">Analytics Overview</h2>
-            <AnalyticsPanel />
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-semibold">Search YouTube</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SearchBox />
+              </CardContent>
+            </Card>
           </section>
           
           <section>
-            <h2 className="text-xl font-semibold mb-6">Upload Video</h2>
-            <UploadForm />
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-6">Recent Videos</h2>
-            <VideoGrid />
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-semibold">Recent Videos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <VideoGrid />
+              </CardContent>
+            </Card>
           </section>
         </main>
       </div>
