@@ -46,8 +46,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Hardcoded client ID and secret for development
-    // In production, these would be securely stored and retrieved
+    // Use the correct client ID and secret 
+    // Make sure these match what's in your Google Developer Console
     const clientId = "458582647832-g8r7pislak878j333hdl0uhei73hbqbq.apps.googleusercontent.com"
     const clientSecret = "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"
     
