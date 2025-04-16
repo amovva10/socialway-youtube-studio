@@ -63,7 +63,8 @@ Deno.serve(async (req) => {
 
     console.log('Using client ID from environment variable')
     
-    const redirectUri = 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback'
+    // Use a fully qualified domain name for the redirect URI to avoid x-deno-subhost header issues
+    const redirectUri = `https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback`
     console.log('Using redirect URI:', redirectUri)
 
     // Create the token exchange request body
@@ -126,7 +127,11 @@ Deno.serve(async (req) => {
     })
 
     // Redirect to the success page with channel information
-    const redirectUrl = new URL('/youtube-connected', req.url)
+    const frontendBaseUrl = url.origin.includes('localhost') 
+      ? 'http://localhost:3000' 
+      : url.origin
+
+    const redirectUrl = new URL('/youtube-connected', frontendBaseUrl)
     redirectUrl.searchParams.set('channel', channel)
     redirectUrl.searchParams.set('id', channelId)
     redirectUrl.searchParams.set('thumbnail', thumbnailUrl)

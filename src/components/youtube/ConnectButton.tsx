@@ -54,7 +54,7 @@ export const ConnectButton = () => {
       console.error("Error initiating YouTube connection:", error);
       toast({
         title: "Connection Error",
-        description: "Unable to connect to YouTube. Please try again.",
+        description: error.message || "Unable to connect to YouTube. Please try again.",
         variant: "destructive"
       });
     } finally {
