@@ -61,19 +61,27 @@ Deno.serve(async (req) => {
       )
     }
 
+    console.log('Using client ID:', clientId.substring(0, 5) + '...')
+    console.log('Client secret is defined:', !!clientSecret)
+
+    // Create the token exchange request body
+    const tokenRequestBody = new URLSearchParams({
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback',
+      grant_type: 'authorization_code',
+    }).toString()
+
+    console.log('Token request prepared with redirect URI:', 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback')
+
     // Exchange the authorization code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        code,
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: 'https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback',
-        grant_type: 'authorization_code',
-      }).toString(),
+      body: tokenRequestBody,
     })
 
     const tokenData = await tokenResponse.json()
@@ -81,7 +89,8 @@ Deno.serve(async (req) => {
 
     // Check if the token exchange was successful
     if (!tokenResponse.ok) {
-      console.error('Failed to exchange code for token:', tokenData)
+      console.error('Failed to exchange code for token. Response status:', tokenResponse.status)
+      console.error('Error details:', JSON.stringify(tokenData))
       return new Response(
         JSON.stringify({ 
           error: 'Failed to retrieve access token', 
