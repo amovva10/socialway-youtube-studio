@@ -1,34 +1,13 @@
 
 import { Bell, ArrowLeft } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const Header = () => {
-  const [channelInfo, setChannelInfo] = useState<{
-    name: string;
-    id: string;
-    thumbnail: string;
-    connected: boolean;
-  } | null>(null);
-  
   const navigate = useNavigate();
   const location = useLocation();
   const showBackButton = location.pathname !== '/';
-
-  useEffect(() => {
-    // Check for YouTube channel info in localStorage
-    const storedInfo = localStorage.getItem('youtubeChannel');
-    if (storedInfo) {
-      try {
-        const parsedInfo = JSON.parse(storedInfo);
-        setChannelInfo(parsedInfo);
-      } catch (e) {
-        console.error("Error parsing channel info:", e);
-      }
-    }
-  }, []);
 
   return (
     <header className="border-b bg-white/50 backdrop-blur-sm">
@@ -53,13 +32,9 @@ export const Header = () => {
             <Bell size={20} />
           </button>
           <Avatar>
-            {channelInfo?.thumbnail ? (
-              <AvatarImage src={channelInfo.thumbnail} alt={channelInfo.name} />
-            ) : (
-              <AvatarFallback className="bg-gradient-to-r from-blue-400 to-blue-500">
-                {channelInfo?.name?.charAt(0) || 'U'}
-              </AvatarFallback>
-            )}
+            <AvatarFallback className="bg-gradient-to-r from-blue-400 to-blue-500">
+              U
+            </AvatarFallback>
           </Avatar>
         </div>
       </div>

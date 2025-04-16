@@ -1,11 +1,9 @@
-
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { ConnectButton } from "@/components/youtube/ConnectButton";
-import { UploadForm } from "@/components/youtube/UploadForm";
 import { VideoGrid } from "@/components/youtube/VideoGrid";
 import { AnalyticsPanel } from "@/components/youtube/AnalyticsPanel";
 import { SearchBox } from "@/components/youtube/SearchBox";
+import { UploadForm } from "@/components/youtube/UploadForm";
 import { useEffect, useState } from "react";
 
 const Index = () => {
@@ -32,7 +30,6 @@ const Index = () => {
         <main className="flex-1 p-6 space-y-8 overflow-auto">
           {!isConnected && (
             <div className="flex justify-center">
-              <ConnectButton />
             </div>
           )}
           
