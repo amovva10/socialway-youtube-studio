@@ -129,36 +129,21 @@ Deno.serve(async (req) => {
     })
 
     // Get the app_origin parameter from the URL
-    const appOrigin = url.searchParams.get('app_origin')
+    const appOrigin = url.searchParams.get('app_origin') || 'https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com'
     
-    // If app_origin is not provided, use a fallback
-    const redirectToOrigin = appOrigin || 'https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com'
+    console.log('Detected app origin:', appOrigin)
     
-    console.log('Detected app origin:', redirectToOrigin)
-    console.log('Redirecting to:', `${redirectToOrigin}/youtube-connected`)
+    // Instead of an HTML redirect page, perform a direct HTTP redirect
+    const redirectUrl = `${appOrigin}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}`
     
-    // Create an HTML page that will redirect to our app with fixed URL
-    const redirectPage = `
-      <html>
-        <head>
-          <title>Redirecting to YouTube Connected</title>
-          <meta http-equiv="refresh" content="0;url=${redirectToOrigin}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}">
-        </head>
-        <body>
-          <h1>Authentication Successful</h1>
-          <p>Redirecting you back to the application...</p>
-          <script>
-            window.location.href = "${redirectToOrigin}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}";
-          </script>
-        </body>
-      </html>
-    `
-
-    return new Response(redirectPage, {
+    console.log('Redirecting to:', redirectUrl)
+    
+    return new Response(null, {
+      status: 302,
       headers: {
         ...corsHeaders,
-        'Content-Type': 'text/html',
-      },
+        'Location': redirectUrl
+      }
     })
 
   } catch (error) {
