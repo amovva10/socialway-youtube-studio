@@ -18,9 +18,11 @@ Deno.serve(async (req) => {
     const code = url.searchParams.get('code')
     const error = url.searchParams.get('error')
     const state = url.searchParams.get('state')
+    const origin = req.headers.get('origin') || url.origin
 
     console.log('Received callback with code:', code ? 'present' : 'missing')
     console.log('State parameter:', state || 'missing')
+    console.log('Origin:', origin)
     
     // Check if there's an error in the callback
     if (error) {
@@ -126,10 +128,30 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
+    // Determine the redirect base URL - either from the request origin or a fallback
+    // Extract the base URL - either from the hostname, referrer or a fallback
+    const baseUrl = (() => {
+      // Try to get from Referrer
+      const referer = req.headers.get('referer')
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer)
+          return `${refererUrl.protocol}//${refererUrl.host}`
+        } catch (e) {
+          console.log('Failed to parse referer URL:', e)
+        }
+      }
+      
+      // Fallback to request URL origin (for local development)
+      return url.origin.includes('supabase.co') 
+        ? 'https://lovable.dev' // Default fallback if we're on Supabase
+        : url.origin // Use the origin of the current request (works for localhost)
+    })()
+    
+    console.log('Using base URL for redirect:', baseUrl)
+    
     // Create an absolute URL for the redirect
-    const redirectToUrl = new URL(url.origin.includes('localhost') 
-      ? 'http://localhost:3000/youtube-connected' 
-      : 'https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com/youtube-connected')
+    const redirectToUrl = new URL(`${baseUrl}/youtube-connected`)
     
     // Add query parameters with channel information
     redirectToUrl.searchParams.set('channel', channel)
