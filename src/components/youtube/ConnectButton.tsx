@@ -48,7 +48,7 @@ export const ConnectButton = () => {
       
       toast({
         title: "Authorization Started",
-        description: "Please complete authorization in the new window",
+        description: "Please complete authorization in the new window. You'll be redirected back when finished.",
       });
     } catch (error) {
       console.error("Error initiating YouTube connection:", error);

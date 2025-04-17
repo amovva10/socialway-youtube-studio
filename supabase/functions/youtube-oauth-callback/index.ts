@@ -128,11 +128,13 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
-    // Determine the redirect base URL - either from the request origin or a fallback
-    // Extract the base URL - either from the hostname, referrer or a fallback
+    // Get the referer header to determine where the request came from
+    const referer = req.headers.get('referer')
+    console.log('Referer header:', referer || 'not present')
+    
+    // Determine the redirect base URL - either from the request referer or a fallback
     const baseUrl = (() => {
-      // Try to get from Referrer
-      const referer = req.headers.get('referer')
+      // Try to get from Referer
       if (referer) {
         try {
           const refererUrl = new URL(referer)
@@ -142,10 +144,25 @@ Deno.serve(async (req) => {
         }
       }
       
-      // Fallback to request URL origin (for local development)
+      // Check host header
+      const host = req.headers.get('host')
+      if (host) {
+        console.log('Host header found:', host)
+        // If this is a preview domain
+        if (host.includes('lovableproject.com')) {
+          return `https://${host}`
+        }
+      }
+      
+      // Fallback options
+      if (url.hostname.includes('lovableproject.com')) {
+        return `https://${url.hostname}`
+      }
+      
+      // Final fallback
       return url.origin.includes('supabase.co') 
-        ? 'https://lovable.dev' // Default fallback if we're on Supabase
-        : url.origin // Use the origin of the current request (works for localhost)
+        ? 'https://lovable.dev' 
+        : url.origin
     })()
     
     console.log('Using base URL for redirect:', baseUrl)

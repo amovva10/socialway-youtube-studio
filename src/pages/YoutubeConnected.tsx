@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const YoutubeConnected = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [timeLeft, setTimeLeft] = useState(4);
+  const { toast } = useToast();
 
   const channelName = searchParams.get('channel') || 'Unknown';
   const channelId = searchParams.get('id') || 'Unknown';
@@ -15,6 +17,19 @@ const YoutubeConnected = () => {
   const accessToken = searchParams.get('access_token') || '';
 
   useEffect(() => {
+    console.log('YouTube connected page loaded with params:', {
+      channelName,
+      channelId,
+      hasThumbnail: !!thumbnailUrl,
+      hasAccessToken: !!accessToken
+    });
+
+    // Show a toast notification
+    toast({
+      title: "YouTube Connection Successful",
+      description: `Connected to channel: ${channelName}`,
+    });
+
     // Store channel info in localStorage
     if (channelName && channelId) {
       localStorage.setItem('youtubeChannel', JSON.stringify({
@@ -25,12 +40,7 @@ const YoutubeConnected = () => {
         accessToken: accessToken
       }));
       
-      console.log('YouTube channel info saved:', { 
-        channelName, 
-        channelId, 
-        hasThumbnail: !!thumbnailUrl,
-        hasAccessToken: !!accessToken 
-      });
+      console.log('YouTube channel info saved to localStorage');
     }
     
     const timer = setInterval(() => {
@@ -45,7 +55,7 @@ const YoutubeConnected = () => {
       clearInterval(timer);
       clearTimeout(redirect);
     };
-  }, [navigate, channelName, channelId, thumbnailUrl, accessToken]);
+  }, [navigate, channelName, channelId, thumbnailUrl, accessToken, toast]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-white p-6">
