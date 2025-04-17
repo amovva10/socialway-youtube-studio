@@ -65,8 +65,8 @@ Deno.serve(async (req) => {
 
     console.log('Using client ID from environment variable')
     
-    // Use a fully qualified domain name for the redirect URI to avoid x-deno-subhost header issues
-    const redirectUri = `https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback`
+    // Use the exact same redirect URI that was used in the frontend
+    const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback"
     console.log('Using redirect URI:', redirectUri)
 
     // Create the token exchange request body
@@ -128,62 +128,50 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
-    // Get the referer header to determine where the request came from
+    // Determine what URL to redirect to after authentication
+    // This should be a URL that exists in your application
+    const appUrl = process.env.REDIRECT_URL || "/"
     const referer = req.headers.get('referer')
-    console.log('Referer header:', referer || 'not present')
+    const host = req.headers.get('host')
     
-    // Determine the redirect base URL - either from the request referer or a fallback
-    const baseUrl = (() => {
-      // Try to get from Referer
-      if (referer) {
-        try {
-          const refererUrl = new URL(referer)
-          return `${refererUrl.protocol}//${refererUrl.host}`
-        } catch (e) {
-          console.log('Failed to parse referer URL:', e)
-        }
-      }
-      
-      // Check host header
-      const host = req.headers.get('host')
-      if (host) {
-        console.log('Host header found:', host)
-        // If this is a preview domain
-        if (host.includes('lovableproject.com')) {
-          return `https://${host}`
-        }
-      }
-      
-      // Fallback options
-      if (url.hostname.includes('lovableproject.com')) {
-        return `https://${url.hostname}`
-      }
-      
-      // Final fallback
-      return url.origin.includes('supabase.co') 
-        ? 'https://lovable.dev' 
-        : url.origin
-    })()
+    // Log headers for debugging
+    console.log('Referer:', referer || 'not set')
+    console.log('Host:', host || 'not set')
     
-    console.log('Using base URL for redirect:', baseUrl)
+    // Determine the base URL for the redirect
+    let baseUrl
     
-    // Create an absolute URL for the redirect
-    const redirectToUrl = new URL(`${baseUrl}/youtube-connected`)
+    // Try to get hostname from various sources
+    if (url.hostname.includes('lovableproject.com')) {
+      baseUrl = `https://${url.hostname}`
+    } else {
+      // Default to a hardcoded value if we can't determine it
+      baseUrl = 'https://lovable.dev'
+    }
     
-    // Add query parameters with channel information
-    redirectToUrl.searchParams.set('channel', channel)
-    redirectToUrl.searchParams.set('id', channelId)
-    redirectToUrl.searchParams.set('thumbnail', thumbnailUrl)
-    redirectToUrl.searchParams.set('access_token', tokenData.access_token)
+    console.log('Redirecting to:', baseUrl + '/youtube-connected')
+    
+    // Create an HTML page that will redirect to our app
+    const redirectPage = `
+      <html>
+        <head>
+          <title>Redirecting...</title>
+          <meta http-equiv="refresh" content="0;url=${baseUrl}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}">
+        </head>
+        <body>
+          <h1>Authentication Successful</h1>
+          <p>Redirecting you back to the application...</p>
+          <script>
+            window.location.href = "${baseUrl}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}";
+          </script>
+        </body>
+      </html>
+    `
 
-    console.log('Redirecting to:', redirectToUrl.toString())
-
-    // Redirect to the success page
-    return new Response(null, {
-      status: 302,
+    return new Response(redirectPage, {
       headers: {
         ...corsHeaders,
-        'Location': redirectToUrl.toString(),
+        'Content-Type': 'text/html',
       },
     })
 

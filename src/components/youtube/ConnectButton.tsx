@@ -27,7 +27,10 @@ export const ConnectButton = () => {
       }
       
       // Build the OAuth URL with the properly encoded parameters
-      const redirectUri = encodeURIComponent("https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback");
+      // IMPORTANT: Use the exact redirect URI that's configured in Google Console
+      const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback";
+      const encodedRedirectUri = encodeURIComponent(redirectUri);
+      
       const scopes = encodeURIComponent([
         "https://www.googleapis.com/auth/youtube.readonly",
         "https://www.googleapis.com/auth/youtube",
@@ -40,7 +43,7 @@ export const ConnectButton = () => {
       // Store state in localStorage to verify when the callback returns
       localStorage.setItem('oauthState', state);
 
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}`;
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}`;
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
       console.log("Using redirect URI:", redirectUri);
