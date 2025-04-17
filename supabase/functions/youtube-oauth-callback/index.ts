@@ -128,41 +128,31 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
-    // Determine the base URL for the redirect based on referer or other headers
+    // Detect the current origin - IMPORTANT FIX
     const referer = req.headers.get('referer')
-    const host = req.headers.get('host')
     
-    // Log headers for debugging
-    console.log('Referer:', referer || 'not set')
-    console.log('Host:', host || 'not set')
+    // Get the current URL to determine the application origin
+    const currentUrl = new URL(req.url)
+    const appOrigin = currentUrl.searchParams.get('app_origin') || 
+                      (referer ? new URL(referer).origin : null) || 
+                      'https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com'
     
-    // Extract the domain from the request URL
-    let baseUrl = new URL(req.url).origin
+    console.log('Detected app origin:', appOrigin)
     
-    // If the URL contains localhost or a preview domain, use that
-    if (referer) {
-      try {
-        const refererUrl = new URL(referer)
-        baseUrl = refererUrl.origin
-      } catch (e) {
-        console.error('Could not parse referer URL:', e)
-      }
-    }
+    console.log('Redirecting to:', `${appOrigin}/youtube-connected`)
     
-    console.log('Redirecting to:', baseUrl + '/youtube-connected')
-    
-    // Create an HTML page that will redirect to our app
+    // Create an HTML page that will redirect to our app with fixed URL
     const redirectPage = `
       <html>
         <head>
-          <title>Redirecting...</title>
-          <meta http-equiv="refresh" content="0;url=${baseUrl}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}">
+          <title>Redirecting to YouTube Connected</title>
+          <meta http-equiv="refresh" content="0;url=${appOrigin}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}">
         </head>
         <body>
           <h1>Authentication Successful</h1>
           <p>Redirecting you back to the application...</p>
           <script>
-            window.location.href = "${baseUrl}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}";
+            window.location.href = "${appOrigin}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}";
           </script>
         </body>
       </html>
