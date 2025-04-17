@@ -47,12 +47,15 @@ export const ConnectButton = () => {
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
       console.log("Using redirect URI:", redirectUri);
-      window.open(oauthUrl, '_blank');
       
+      // Update toast to be more informative
       toast({
-        title: "Authorization Started",
-        description: "Please complete authorization in the new window. You'll be redirected back when finished.",
+        title: "Opening YouTube Authorization",
+        description: "Please complete the authorization in the new window. You'll be redirected back when finished.",
       });
+      
+      // Open in a new window
+      window.open(oauthUrl, '_blank');
     } catch (error) {
       console.error("Error initiating YouTube connection:", error);
       toast({

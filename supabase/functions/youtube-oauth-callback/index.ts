@@ -128,9 +128,7 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
-    // Determine what URL to redirect to after authentication
-    // This should be a URL that exists in your application
-    const appUrl = process.env.REDIRECT_URL || "/"
+    // Determine the base URL for the redirect based on referer or other headers
     const referer = req.headers.get('referer')
     const host = req.headers.get('host')
     
@@ -138,15 +136,17 @@ Deno.serve(async (req) => {
     console.log('Referer:', referer || 'not set')
     console.log('Host:', host || 'not set')
     
-    // Determine the base URL for the redirect
-    let baseUrl
+    // Extract the domain from the request URL
+    let baseUrl = new URL(req.url).origin
     
-    // Try to get hostname from various sources
-    if (url.hostname.includes('lovableproject.com')) {
-      baseUrl = `https://${url.hostname}`
-    } else {
-      // Default to a hardcoded value if we can't determine it
-      baseUrl = 'https://lovable.dev'
+    // If the URL contains localhost or a preview domain, use that
+    if (referer) {
+      try {
+        const refererUrl = new URL(referer)
+        baseUrl = refererUrl.origin
+      } catch (e) {
+        console.error('Could not parse referer URL:', e)
+      }
     }
     
     console.log('Redirecting to:', baseUrl + '/youtube-connected')
