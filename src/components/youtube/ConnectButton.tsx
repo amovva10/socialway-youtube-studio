@@ -30,6 +30,12 @@ export const ConnectButton = () => {
       const appOrigin = window.location.origin;
       console.log('Current application origin:', appOrigin);
       
+      // Ensure we're using the correct domain format (lovable.app, not lovableproject.com)
+      let appDomain = appOrigin;
+      if (appDomain.includes('lovableproject.com')) {
+        appDomain = appDomain.replace('lovableproject.com', 'lovable.app');
+      }
+      
       // Build the OAuth URL with the properly encoded parameters
       // IMPORTANT: Use the exact redirect URI that's configured in Google Console
       const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback";
@@ -48,7 +54,7 @@ export const ConnectButton = () => {
       localStorage.setItem('oauthState', state);
 
       // Add app_origin as a query parameter to help with the redirect back
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodeURIComponent(appOrigin)}`;
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodeURIComponent(appDomain)}`;
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
       console.log("Using redirect URI:", redirectUri);
