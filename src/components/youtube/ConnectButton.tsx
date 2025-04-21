@@ -26,7 +26,7 @@ export const ConnectButton = () => {
         throw new Error("No client ID returned from server");
       }
       
-      // Get current application origin
+      // Get current application origin and ensure it's properly encoded and passed
       const appOrigin = window.location.origin;
       console.log('Current application origin:', appOrigin);
       
@@ -47,11 +47,15 @@ export const ConnectButton = () => {
       // Store state in localStorage to verify when the callback returns
       localStorage.setItem('oauthState', state);
 
-      // Add app_origin as a query parameter to help with the redirect back
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodeURIComponent(appOrigin)}`;
+      // Make sure app_origin is properly encoded as a separate parameter
+      const encodedAppOrigin = encodeURIComponent(appOrigin);
+      
+      // Add app_origin as a separate query parameter to help with the redirect back
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodedAppOrigin}`;
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
       console.log("Using redirect URI:", redirectUri);
+      console.log("Sending app_origin parameter:", encodedAppOrigin);
       
       // Update toast to be more informative
       toast({

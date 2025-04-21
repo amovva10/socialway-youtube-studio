@@ -128,8 +128,7 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
-    // Get the app_origin parameter from the URL or use the requested one
-    // IMPORTANT: We're fixing the app origin issue by explicitly getting it from the app_origin param
+    // IMPORTANT: Get the app_origin parameter from the URL and use it explicitly
     const appOrigin = url.searchParams.get('app_origin')
     
     if (!appOrigin) {
