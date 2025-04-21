@@ -128,12 +128,24 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
-    // Get the app_origin parameter from the URL and use it exactly as provided
-    const appOrigin = url.searchParams.get('app_origin') || origin
+    // Get the app_origin parameter from the URL or use the requested one
+    // IMPORTANT: We're fixing the app origin issue by explicitly getting it from the app_origin param
+    const appOrigin = url.searchParams.get('app_origin')
     
-    console.log('Detected app origin:', appOrigin)
+    if (!appOrigin) {
+      console.error('Missing app_origin parameter')
+      return new Response(
+        JSON.stringify({ error: 'Missing app_origin parameter' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
     
-    // Instead of redirecting, return a page with HTML that will handle the redirect client-side
+    console.log('Using app origin from parameter:', appOrigin)
+    
+    // Return a page with HTML that will handle the redirect client-side
     const html = `
       <!DOCTYPE html>
       <html>

@@ -26,7 +26,7 @@ export const ConnectButton = () => {
         throw new Error("No client ID returned from server");
       }
       
-      // Get current application origin - use it as is without modification
+      // Get current application origin
       const appOrigin = window.location.origin;
       console.log('Current application origin:', appOrigin);
       
