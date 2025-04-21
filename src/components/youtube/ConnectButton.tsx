@@ -26,15 +26,15 @@ export const ConnectButton = () => {
         throw new Error("No client ID returned from server");
       }
       
-      // Get current application origin and ensure it's properly encoded and passed
+      // Get current application origin and ensure it's properly encoded
       const appOrigin = window.location.origin;
       console.log('Current application origin:', appOrigin);
       
-      // Build the OAuth URL with the properly encoded parameters
       // IMPORTANT: Use the exact redirect URI that's configured in Google Console
+      // DO NOT include any additional parameters in the redirect_uri at this stage
       const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback";
-      const encodedRedirectUri = encodeURIComponent(redirectUri);
       
+      // Encode scopes properly
       const scopes = encodeURIComponent([
         "https://www.googleapis.com/auth/youtube.readonly",
         "https://www.googleapis.com/auth/youtube",
@@ -42,26 +42,21 @@ export const ConnectButton = () => {
         "https://www.googleapis.com/auth/youtube.force-ssl"
       ].join(" "));
 
-      // Use state parameter to improve security
+      // Use state parameter for security
       const state = Math.random().toString(36).substring(2);
-      // Store state in localStorage to verify when the callback returns
       localStorage.setItem('oauthState', state);
 
-      // Make sure app_origin is properly encoded as a separate parameter
+      // Build the OAuth URL with separate app_origin parameter
+      // Now we pass app_origin as a separate parameter in the OAuth URL
       const encodedAppOrigin = encodeURIComponent(appOrigin);
+      const encodedRedirectUri = encodeURIComponent(redirectUri);
       
-      // Ensure app_origin parameter is added directly to the redirect_uri as a query parameter
-      // We'll append app_origin as a query param to the redirect_uri itself
-      const redirectUriWithAppOrigin = `${redirectUri}?app_origin=${encodedAppOrigin}`;
-      const encodedRedirectUriWithAppOrigin = encodeURIComponent(redirectUriWithAppOrigin);
-      
-      // Build the OAuth URL without app_origin as a separate parameter, since it's now part of the redirect URI
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUriWithAppOrigin}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}`;
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodedAppOrigin}`;
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
-      console.log("Using redirect URI with app_origin:", redirectUriWithAppOrigin);
+      console.log("Using redirect URI:", redirectUri);
+      console.log("Adding app_origin as parameter:", appOrigin);
       
-      // Update toast to be more informative
       toast({
         title: "Opening YouTube Authorization",
         description: "Please complete the authorization in the new window. You'll be redirected back when finished.",

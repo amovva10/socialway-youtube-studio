@@ -19,8 +19,7 @@ Deno.serve(async (req) => {
     const error = url.searchParams.get('error')
     const state = url.searchParams.get('state')
     
-    // Get app_origin parameter from the URL parameters
-    // We're getting it from the request URL, not from a separate parameter
+    // Get app_origin parameter directly from the query parameters
     const appOrigin = url.searchParams.get('app_origin')
     
     console.log('Received callback with code:', code ? 'present' : 'missing')
@@ -98,8 +97,7 @@ async function handleOAuthCallback(code: string, appOrigin: string, corsHeaders:
 
     console.log('Using client ID from environment variable')
     
-    // Use the exact same redirect URI base that was used in the frontend
-    // Important: Do NOT include the app_origin parameter here, as it was added at request time
+    // Use the exact same redirect URI that was used in the frontend
     const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback"
     console.log('Using redirect URI:', redirectUri)
 
@@ -162,7 +160,7 @@ async function handleOAuthCallback(code: string, appOrigin: string, corsHeaders:
       hasThumbnail: !!thumbnailUrl
     })
     
-    console.log('Using app origin:', appOrigin)
+    console.log('Using app origin for redirect:', appOrigin)
     
     // Return a page with HTML that will handle the redirect client-side
     const html = `
