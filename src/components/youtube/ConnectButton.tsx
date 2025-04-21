@@ -50,12 +50,16 @@ export const ConnectButton = () => {
       // Make sure app_origin is properly encoded as a separate parameter
       const encodedAppOrigin = encodeURIComponent(appOrigin);
       
-      // Add app_origin as a separate query parameter to help with the redirect back
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodedAppOrigin}`;
+      // Ensure app_origin parameter is added directly to the redirect_uri as a query parameter
+      // We'll append app_origin as a query param to the redirect_uri itself
+      const redirectUriWithAppOrigin = `${redirectUri}?app_origin=${encodedAppOrigin}`;
+      const encodedRedirectUriWithAppOrigin = encodeURIComponent(redirectUriWithAppOrigin);
+      
+      // Build the OAuth URL without app_origin as a separate parameter, since it's now part of the redirect URI
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUriWithAppOrigin}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}`;
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
-      console.log("Using redirect URI:", redirectUri);
-      console.log("Sending app_origin parameter:", encodedAppOrigin);
+      console.log("Using redirect URI with app_origin:", redirectUriWithAppOrigin);
       
       // Update toast to be more informative
       toast({

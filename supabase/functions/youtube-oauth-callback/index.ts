@@ -18,11 +18,14 @@ Deno.serve(async (req) => {
     const code = url.searchParams.get('code')
     const error = url.searchParams.get('error')
     const state = url.searchParams.get('state')
-    const origin = req.headers.get('origin') || url.origin
-
+    
+    // Get app_origin parameter from the URL parameters
+    // We're getting it from the request URL, not from a separate parameter
+    const appOrigin = url.searchParams.get('app_origin')
+    
     console.log('Received callback with code:', code ? 'present' : 'missing')
     console.log('State parameter:', state || 'missing')
-    console.log('Origin:', origin)
+    console.log('App origin parameter:', appOrigin || 'missing')
     
     // Check if there's an error in the callback
     if (error) {
@@ -47,7 +50,37 @@ Deno.serve(async (req) => {
         }
       )
     }
+    
+    // If no app_origin was received, handle it gracefully
+    if (!appOrigin) {
+      console.error('Missing app_origin parameter')
+      // Set a default app_origin if missing - use your application's primary domain
+      // This is a fallback in case the parameter isn't passed correctly
+      const defaultAppOrigin = "https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com"
+      console.log('Using default app origin:', defaultAppOrigin)
+      
+      // Continue the process with the default app origin
+      return await handleOAuthCallback(code, defaultAppOrigin, corsHeaders)
+    }
+    
+    // Process the OAuth callback with the provided app_origin
+    return await handleOAuthCallback(code, appOrigin, corsHeaders)
 
+  } catch (error) {
+    console.error('Error in OAuth callback:', error.message)
+    return new Response(
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+})
+
+// Separate function to handle the OAuth callback logic
+async function handleOAuthCallback(code: string, appOrigin: string, corsHeaders: Record<string, string>) {
+  try {
     // Get client ID and secret from environment variables
     const clientId = Deno.env.get("CLIENT_ID")
     const clientSecret = Deno.env.get("CLIENT_SECRET")
@@ -65,7 +98,8 @@ Deno.serve(async (req) => {
 
     console.log('Using client ID from environment variable')
     
-    // Use the exact same redirect URI that was used in the frontend
+    // Use the exact same redirect URI base that was used in the frontend
+    // Important: Do NOT include the app_origin parameter here, as it was added at request time
     const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback"
     console.log('Using redirect URI:', redirectUri)
 
@@ -127,22 +161,8 @@ Deno.serve(async (req) => {
       channelId,
       hasThumbnail: !!thumbnailUrl
     })
-
-    // IMPORTANT: Get the app_origin parameter from the URL and use it explicitly
-    const appOrigin = url.searchParams.get('app_origin')
     
-    if (!appOrigin) {
-      console.error('Missing app_origin parameter')
-      return new Response(
-        JSON.stringify({ error: 'Missing app_origin parameter' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-    
-    console.log('Using app origin from parameter:', appOrigin)
+    console.log('Using app origin:', appOrigin)
     
     // Return a page with HTML that will handle the redirect client-side
     const html = `
@@ -201,7 +221,10 @@ Deno.serve(async (req) => {
             };
             
             // Build the redirect URL with parameters
-            const redirectURL = new URL("/youtube-connected", "${appOrigin}");
+            const appOrigin = "${appOrigin}";
+            console.log("Using app origin for redirect:", appOrigin);
+            
+            const redirectURL = new URL("/youtube-connected", appOrigin);
             Object.keys(params).forEach(key => {
               redirectURL.searchParams.append(key, params[key]);
             });
@@ -225,15 +248,14 @@ Deno.serve(async (req) => {
         'Content-Type': 'text/html'
       }
     });
-
   } catch (error) {
-    console.error('Error in OAuth callback:', error.message)
+    console.error('Error processing OAuth callback:', error.message);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    )
+    );
   }
-})
+}
