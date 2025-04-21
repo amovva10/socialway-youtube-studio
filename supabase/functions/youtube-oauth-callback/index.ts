@@ -128,14 +128,8 @@ Deno.serve(async (req) => {
       hasThumbnail: !!thumbnailUrl
     })
 
-    // Get the app_origin parameter from the URL, use the correct domain format
-    // Convert any lovableproject.com URLs to lovable.app URLs
-    let appOrigin = url.searchParams.get('app_origin') || 'https://1dca5d46-4777-461c-9861-9ab468bfd891.lovable.app'
-    
-    // If the URL contains lovableproject.com, replace it with lovable.app
-    if (appOrigin.includes('lovableproject.com')) {
-      appOrigin = appOrigin.replace('lovableproject.com', 'lovable.app')
-    }
+    // Get the app_origin parameter from the URL and use it exactly as provided
+    const appOrigin = url.searchParams.get('app_origin') || origin
     
     console.log('Detected app origin:', appOrigin)
     
