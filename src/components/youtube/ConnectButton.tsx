@@ -5,12 +5,11 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from 'react-router-dom';
+// No useNavigate needed anymore
 
 export const ConnectButton = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleConnect = async () => {
     setIsLoading(true);
@@ -33,7 +32,6 @@ export const ConnectButton = () => {
       console.log('Current application origin:', appOrigin);
       
       // IMPORTANT: Use the exact redirect URI that's configured in Google Console
-      // DO NOT include any additional parameters in the redirect_uri at this stage
       const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback";
       
       // Encode scopes properly
@@ -49,62 +47,22 @@ export const ConnectButton = () => {
       localStorage.setItem('oauthState', state);
 
       // Build the OAuth URL with separate app_origin parameter
-      // Now we pass app_origin as a separate parameter in the OAuth URL
       const encodedAppOrigin = encodeURIComponent(appOrigin);
       const encodedRedirectUri = encodeURIComponent(redirectUri);
       
       const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodedAppOrigin}`;
       
-      console.log("Opening OAuth URL with client ID:", CLIENT_ID);
+      console.log("Navigating to OAuth URL with client ID:", CLIENT_ID);
       console.log("Using redirect URI:", redirectUri);
       console.log("Adding app_origin as parameter:", appOrigin);
       
-      // Add some local state to detect when we return from the OAuth flow
+      // Add local state to detect when we return from the OAuth flow
       localStorage.setItem('youtubeAuthInProgress', 'true');
       
-      // Open in a new window and periodically check for successful login
-      const authWindow = window.open(oauthUrl, 'youtubeAuth', 'width=600,height=700');
-      
-      // Start a timer to check if we've completed authentication
-      const checkLoginInterval = setInterval(() => {
-        // Check if we have YouTube channel data in localStorage
-        const channelData = localStorage.getItem('youtubeChannel');
-        if (channelData) {
-          // We have data, auth was successful
-          const channel = JSON.parse(channelData);
-          if (channel.connected) {
-            // Clear the interval
-            clearInterval(checkLoginInterval);
-            // Close the auth window if it's still open
-            if (authWindow && !authWindow.closed) {
-              authWindow.close();
-            }
-            // Remove the in-progress flag
-            localStorage.removeItem('youtubeAuthInProgress');
-            // Show success toast
-            toast({
-              title: "YouTube Connected Successfully",
-              description: `Connected to channel: ${channel.name}`,
-            });
-            // Navigate to the YouTube Connected confirmation page
-            navigate('/youtube-connected', { 
-              state: { 
-                fromAuth: true,
-                channel: channel.name,
-                id: channel.id,
-                thumbnail: channel.thumbnail
-              } 
-            });
-          }
-        }
-      }, 1000); // Check every second
-      
-      // Stop checking after 5 minutes (failsafe)
-      setTimeout(() => {
-        clearInterval(checkLoginInterval);
-        localStorage.removeItem('youtubeAuthInProgress');
-      }, 5 * 60 * 1000);
-      
+      // Navigate to the OAuth URL in the same window/tab
+      window.location.href = oauthUrl;
+
+      // All further logic after successful auth is triggered by the redirect to /youtube-connected route.
     } catch (error) {
       console.error("Error initiating YouTube connection:", error);
       toast({
@@ -112,7 +70,6 @@ export const ConnectButton = () => {
         description: error.message || "Unable to connect to YouTube. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsLoading(false);
     }
   };
