@@ -18,13 +18,11 @@ Deno.serve(async (req) => {
     const code = url.searchParams.get('code')
     const error = url.searchParams.get('error')
     const state = url.searchParams.get('state')
-    
-    // Get app_origin parameter directly from the query parameters
-    const appOrigin = url.searchParams.get('app_origin')
-    
+    const origin = req.headers.get('origin') || url.origin
+
     console.log('Received callback with code:', code ? 'present' : 'missing')
     console.log('State parameter:', state || 'missing')
-    console.log('App origin parameter:', appOrigin || 'missing')
+    console.log('Origin:', origin)
     
     // Check if there's an error in the callback
     if (error) {
@@ -49,37 +47,7 @@ Deno.serve(async (req) => {
         }
       )
     }
-    
-    // If no app_origin was received, handle it gracefully
-    if (!appOrigin) {
-      console.error('Missing app_origin parameter')
-      // Set a default app_origin if missing - use your application's primary domain
-      // This is a fallback in case the parameter isn't passed correctly
-      const defaultAppOrigin = "https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com"
-      console.log('Using default app origin:', defaultAppOrigin)
-      
-      // Continue the process with the default app origin
-      return await handleOAuthCallback(code, defaultAppOrigin, corsHeaders)
-    }
-    
-    // Process the OAuth callback with the provided app_origin
-    return await handleOAuthCallback(code, appOrigin, corsHeaders)
 
-  } catch (error) {
-    console.error('Error in OAuth callback:', error.message)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    )
-  }
-})
-
-// Separate function to handle the OAuth callback logic
-async function handleOAuthCallback(code: string, appOrigin: string, corsHeaders: Record<string, string>) {
-  try {
     // Get client ID and secret from environment variables
     const clientId = Deno.env.get("CLIENT_ID")
     const clientSecret = Deno.env.get("CLIENT_SECRET")
@@ -159,101 +127,33 @@ async function handleOAuthCallback(code: string, appOrigin: string, corsHeaders:
       channelId,
       hasThumbnail: !!thumbnailUrl
     })
+
+    // Get the app_origin parameter from the URL
+    const appOrigin = url.searchParams.get('app_origin') || 'https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com'
     
-    console.log('Using app origin for redirect:', appOrigin)
+    console.log('Detected app origin:', appOrigin)
     
-    // Return a page with HTML that will handle the redirect client-side
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>YouTube Connection Successful</title>
-          <meta charset="utf-8">
-          <meta http-equiv="X-UA-Compatible" content="IE=edge">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              max-width: 500px;
-              margin: 0 auto;
-              padding: 20px;
-              text-align: center;
-            }
-            h1 { color: #4285f4; }
-            .card {
-              background: white;
-              border-radius: 8px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-              padding: 20px;
-              margin-top: 20px;
-            }
-            .success-icon {
-              color: #34a853;
-              font-size: 48px;
-              margin-bottom: 16px;
-            }
-            .redirect-message {
-              color: #666;
-              font-size: 14px;
-              margin-top: 16px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <div class="success-icon">✓</div>
-            <h1>Connection Successful</h1>
-            <p>Your YouTube channel "${channel}" has been connected successfully.</p>
-            <p class="redirect-message">Redirecting you back to the application...</p>
-          </div>
-          
-          <script>
-            // The parameters to pass back to the application
-            const params = {
-              channel: "${channel}",
-              id: "${channelId}",
-              thumbnail: "${thumbnailUrl}",
-              access_token: "${tokenData.access_token}"
-            };
-            
-            // Build the redirect URL with parameters
-            const appOrigin = "${appOrigin}";
-            console.log("Using app origin for redirect:", appOrigin);
-            
-            const redirectURL = new URL("/youtube-connected", appOrigin);
-            Object.keys(params).forEach(key => {
-              redirectURL.searchParams.append(key, params[key]);
-            });
-            
-            // Log the redirect URL (for debugging)
-            console.log("Redirecting to:", redirectURL.toString());
-            
-            // Redirect after a short delay (to show the success message)
-            setTimeout(() => {
-              window.location.href = redirectURL.toString();
-            }, 1500);
-          </script>
-        </body>
-      </html>
-    `;
+    // Instead of an HTML redirect page, perform a direct HTTP redirect
+    const redirectUrl = `${appOrigin}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}`
     
-    return new Response(html, {
-      status: 200,
+    console.log('Redirecting to:', redirectUrl)
+    
+    return new Response(null, {
+      status: 302,
       headers: {
         ...corsHeaders,
-        'Content-Type': 'text/html'
+        'Location': redirectUrl
       }
-    });
+    })
+
   } catch (error) {
-    console.error('Error processing OAuth callback:', error.message);
+    console.error('Error in OAuth callback:', error.message)
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    );
+    )
   }
-}
+})

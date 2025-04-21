@@ -26,14 +26,15 @@ export const ConnectButton = () => {
         throw new Error("No client ID returned from server");
       }
       
-      // Get current application origin and ensure it's properly encoded
+      // Get current application origin
       const appOrigin = window.location.origin;
       console.log('Current application origin:', appOrigin);
       
+      // Build the OAuth URL with the properly encoded parameters
       // IMPORTANT: Use the exact redirect URI that's configured in Google Console
       const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback";
+      const encodedRedirectUri = encodeURIComponent(redirectUri);
       
-      // Encode scopes properly
       const scopes = encodeURIComponent([
         "https://www.googleapis.com/auth/youtube.readonly",
         "https://www.googleapis.com/auth/youtube",
@@ -41,27 +42,25 @@ export const ConnectButton = () => {
         "https://www.googleapis.com/auth/youtube.force-ssl"
       ].join(" "));
 
-      // Use state parameter for security
+      // Use state parameter to improve security
       const state = Math.random().toString(36).substring(2);
+      // Store state in localStorage to verify when the callback returns
       localStorage.setItem('oauthState', state);
 
-      // Build the OAuth URL with separate app_origin parameter
-      const encodedAppOrigin = encodeURIComponent(appOrigin);
-      const encodedRedirectUri = encodeURIComponent(redirectUri);
+      // Add app_origin as a query parameter to help with the redirect back
+      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodeURIComponent(appOrigin)}`;
       
-      const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodedAppOrigin}`;
-      
-      console.log("Navigating to OAuth URL with client ID:", CLIENT_ID);
+      console.log("Opening OAuth URL with client ID:", CLIENT_ID);
       console.log("Using redirect URI:", redirectUri);
-      console.log("Adding app_origin as parameter:", appOrigin);
       
-      // Add local state to detect when we return from the OAuth flow
-      localStorage.setItem('youtubeAuthInProgress', 'true');
+      // Update toast to be more informative
+      toast({
+        title: "Opening YouTube Authorization",
+        description: "Please complete the authorization in the new window. You'll be redirected back when finished.",
+      });
       
-      // Navigate to the OAuth URL in the same window/tab
-      window.location.href = oauthUrl;
-
-      // All further logic after successful auth is triggered by the redirect to /youtube-connected route.
+      // Open in a new window
+      window.open(oauthUrl, '_blank');
     } catch (error) {
       console.error("Error initiating YouTube connection:", error);
       toast({
@@ -69,6 +68,7 @@ export const ConnectButton = () => {
         description: error.message || "Unable to connect to YouTube. Please try again.",
         variant: "destructive"
       });
+    } finally {
       setIsLoading(false);
     }
   };
