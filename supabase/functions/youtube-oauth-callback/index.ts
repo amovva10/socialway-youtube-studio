@@ -133,18 +133,87 @@ Deno.serve(async (req) => {
     
     console.log('Detected app origin:', appOrigin)
     
-    // Instead of an HTML redirect page, perform a direct HTTP redirect
-    const redirectUrl = `${appOrigin}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}`
+    // Instead of redirecting, return a page with HTML that will handle the redirect client-side
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>YouTube Connection Successful</title>
+          <meta charset="utf-8">
+          <meta http-equiv="X-UA-Compatible" content="IE=edge">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 500px;
+              margin: 0 auto;
+              padding: 20px;
+              text-align: center;
+            }
+            h1 { color: #4285f4; }
+            .card {
+              background: white;
+              border-radius: 8px;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              padding: 20px;
+              margin-top: 20px;
+            }
+            .success-icon {
+              color: #34a853;
+              font-size: 48px;
+              margin-bottom: 16px;
+            }
+            .redirect-message {
+              color: #666;
+              font-size: 14px;
+              margin-top: 16px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="success-icon">✓</div>
+            <h1>Connection Successful</h1>
+            <p>Your YouTube channel "${channel}" has been connected successfully.</p>
+            <p class="redirect-message">Redirecting you back to the application...</p>
+          </div>
+          
+          <script>
+            // The parameters to pass back to the application
+            const params = {
+              channel: "${channel}",
+              id: "${channelId}",
+              thumbnail: "${thumbnailUrl}",
+              access_token: "${tokenData.access_token}"
+            };
+            
+            // Build the redirect URL with parameters
+            const redirectURL = new URL("/youtube-connected", "${appOrigin}");
+            Object.keys(params).forEach(key => {
+              redirectURL.searchParams.append(key, params[key]);
+            });
+            
+            // Log the redirect URL (for debugging)
+            console.log("Redirecting to:", redirectURL.toString());
+            
+            // Redirect after a short delay (to show the success message)
+            setTimeout(() => {
+              window.location.href = redirectURL.toString();
+            }, 1500);
+          </script>
+        </body>
+      </html>
+    `;
     
-    console.log('Redirecting to:', redirectUrl)
-    
-    return new Response(null, {
-      status: 302,
+    return new Response(html, {
+      status: 200,
       headers: {
         ...corsHeaders,
-        'Location': redirectUrl
+        'Content-Type': 'text/html'
       }
-    })
+    });
 
   } catch (error) {
     console.error('Error in OAuth callback:', error.message)
