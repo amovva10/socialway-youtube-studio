@@ -5,10 +5,12 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from 'react-router-dom';
 
 export const ConnectButton = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleConnect = async () => {
     setIsLoading(true);
@@ -57,13 +59,52 @@ export const ConnectButton = () => {
       console.log("Using redirect URI:", redirectUri);
       console.log("Adding app_origin as parameter:", appOrigin);
       
-      toast({
-        title: "Opening YouTube Authorization",
-        description: "Please complete the authorization in the new window. You'll be redirected back when finished.",
-      });
+      // Add some local state to detect when we return from the OAuth flow
+      localStorage.setItem('youtubeAuthInProgress', 'true');
       
-      // Open in a new window
-      window.open(oauthUrl, '_blank');
+      // Open in a new window and periodically check for successful login
+      const authWindow = window.open(oauthUrl, 'youtubeAuth', 'width=600,height=700');
+      
+      // Start a timer to check if we've completed authentication
+      const checkLoginInterval = setInterval(() => {
+        // Check if we have YouTube channel data in localStorage
+        const channelData = localStorage.getItem('youtubeChannel');
+        if (channelData) {
+          // We have data, auth was successful
+          const channel = JSON.parse(channelData);
+          if (channel.connected) {
+            // Clear the interval
+            clearInterval(checkLoginInterval);
+            // Close the auth window if it's still open
+            if (authWindow && !authWindow.closed) {
+              authWindow.close();
+            }
+            // Remove the in-progress flag
+            localStorage.removeItem('youtubeAuthInProgress');
+            // Show success toast
+            toast({
+              title: "YouTube Connected Successfully",
+              description: `Connected to channel: ${channel.name}`,
+            });
+            // Navigate to the YouTube Connected confirmation page
+            navigate('/youtube-connected', { 
+              state: { 
+                fromAuth: true,
+                channel: channel.name,
+                id: channel.id,
+                thumbnail: channel.thumbnail
+              } 
+            });
+          }
+        }
+      }, 1000); // Check every second
+      
+      // Stop checking after 5 minutes (failsafe)
+      setTimeout(() => {
+        clearInterval(checkLoginInterval);
+        localStorage.removeItem('youtubeAuthInProgress');
+      }, 5 * 60 * 1000);
+      
     } catch (error) {
       console.error("Error initiating YouTube connection:", error);
       toast({
