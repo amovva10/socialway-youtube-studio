@@ -1,3 +1,4 @@
+
 import { corsHeaders } from '../utils/cors.ts';
 
 export async function handleCommunityPosts(accessToken: string | null, category?: string) {
@@ -50,6 +51,7 @@ export async function handleCommunityPosts(accessToken: string | null, category?
       
       // Add category to the API query if specified
       const categoryParam = category ? `&videoCategoryId=${getCategoryId(category)}` : '';
+      console.log(`Using category param: ${categoryParam}`);
       
       const trendingResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular${categoryParam}&maxResults=5&key=${YOUTUBE_API_KEY}`
@@ -60,6 +62,7 @@ export async function handleCommunityPosts(accessToken: string | null, category?
       }
 
       const trendingData = await trendingResponse.json();
+      console.log("YouTube category IDs in response:", trendingData.items.map((item: any) => item.snippet.categoryId));
       
       const trendingPosts = trendingData.items.map((item: any) => ({
         title: "Trending on YouTube",
@@ -84,9 +87,10 @@ export async function handleCommunityPosts(accessToken: string | null, category?
 // Helper function to map category names to YouTube category IDs
 function getCategoryId(category: string): string {
   const categoryMap: Record<string, string> = {
-    business: '20',    // Gaming (using as proxy for business)
-    education: '27',   // Education
-    entertainment: '24', // Entertainment
+    'business': '22',    // People & Blogs (for business content)
+    'education': '27',   // Education
+    'entertainment': '24', // Entertainment
+    'gaming': '20',      // Gaming (proper category for gaming)
   };
   return categoryMap[category] || '';
 }
@@ -94,9 +98,14 @@ function getCategoryId(category: string): string {
 // Helper function to map YouTube category IDs back to our category names
 function getCategoryName(categoryId: string): string {
   const categoryMap: Record<string, string> = {
-    '20': 'Business',
-    '27': 'Education',
-    '24': 'Entertainment',
+    '20': 'Gaming',      // Gaming (was incorrectly mapped to Business)
+    '22': 'Business',    // People & Blogs (for business content)
+    '27': 'Education',   // Education
+    '24': 'Entertainment', // Entertainment
+    '17': 'Sports',      // Adding Sports category
+    '10': 'Music',       // Adding Music category
+    '25': 'News',        // Adding News category
+    '28': 'Science',     // Adding Science & Technology category
   };
   return categoryMap[categoryId] || 'Other';
 }

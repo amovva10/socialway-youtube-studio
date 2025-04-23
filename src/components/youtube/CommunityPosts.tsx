@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, TrendingUp, MessageSquare, Share, Globe, Briefcase, Book, Video } from "lucide-react";
+import { Loader2, TrendingUp, MessageSquare, Share, Globe, Briefcase, Book, Video, Gamepad } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ConnectButton } from "./ConnectButton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Badge } from "@/components/ui/badge";
 
 interface CommunityPost {
   title: string;
@@ -24,6 +25,7 @@ const categories = [
   { id: 'business', label: 'Business', icon: Briefcase },
   { id: 'education', label: 'Education', icon: Book },
   { id: 'entertainment', label: 'Entertainment', icon: Video },
+  { id: 'gaming', label: 'Gaming', icon: Gamepad },
 ];
 
 export const CommunityPosts = () => {
@@ -167,12 +169,19 @@ export const CommunityPosts = () => {
                     <p className="text-sm text-gray-500">{post.authorDisplayName}</p>
                     <h3 className="text-lg font-semibold mt-1">{post.title}</h3>
                   </div>
-                  {post.likeCount > 100 && (
-                    <span className="flex items-center text-green-600">
-                      <TrendingUp className="h-4 w-4 mr-1" />
-                      Trending
-                    </span>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {post.category && (
+                      <Badge variant="outline" className="text-xs">
+                        {post.category}
+                      </Badge>
+                    )}
+                    {post.likeCount > 100 && (
+                      <span className="flex items-center text-green-600">
+                        <TrendingUp className="h-4 w-4 mr-1" />
+                        Trending
+                      </span>
+                    )}
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
