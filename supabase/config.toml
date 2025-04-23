@@ -11,7 +11,11 @@ port = 54322
 
 [auth]
 site_url = "https://socialway-youtube-studio.lovable.app"
-additional_redirect_urls = ["https://socialway-youtube-studio.lovable.app/youtube-connected", "https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com/youtube-connected"]
+additional_redirect_urls = [
+  "https://socialway-youtube-studio.lovable.app/youtube-connected", 
+  "https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com/youtube-connected",
+  "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback"
+]
 
 [realtime]
 enabled = true

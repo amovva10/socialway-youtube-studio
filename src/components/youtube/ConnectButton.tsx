@@ -34,7 +34,7 @@ export const ConnectButton = () => {
       console.log('Current application origin:', appOrigin);
       
       // Build the OAuth URL with the properly encoded parameters
-      // Use the current application origin for the redirect
+      // The redirect URI must match exactly what's registered in Google Cloud Console
       const redirectUri = `https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback`;
       const encodedRedirectUri = encodeURIComponent(redirectUri);
       

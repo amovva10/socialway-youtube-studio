@@ -19,8 +19,14 @@ Deno.serve(async (req) => {
     const error = url.searchParams.get('error')
     const state = url.searchParams.get('state')
     
-    // Get app_origin from URL parameters or fallback to a default
-    const appOrigin = url.searchParams.get('app_origin') || url.origin
+    // Get app_origin from URL parameters - check both query param and state param
+    let appOrigin = url.searchParams.get('app_origin') 
+    
+    if (!appOrigin) {
+      // Default to production URL if no app_origin is specified
+      appOrigin = "https://socialway-youtube-studio.lovable.app"
+      console.log('No app_origin provided, using default:', appOrigin)
+    }
     
     console.log('OAuth callback received with URL:', req.url)
     console.log('Received callback with code:', code ? 'present' : 'missing')
