@@ -2,7 +2,7 @@
 import { Bell, ArrowLeft, UserRound, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +12,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useEffect, useState } from 'react';
-import { ConnectButton } from "@/components/youtube/ConnectButton";
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -92,7 +91,7 @@ export const Header = () => {
             <Bell size={20} />
           </button>
           
-          {isYouTubeConnected ? (
+          {isYouTubeConnected && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer">
@@ -108,10 +107,6 @@ export const Header = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <div className="hidden md:block">
-              <ConnectButton />
-            </div>
           )}
         </div>
       </div>
