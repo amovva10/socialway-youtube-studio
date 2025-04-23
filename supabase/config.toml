@@ -10,7 +10,7 @@ schemas = ["public", "storage", "graphql_public"]
 port = 54322
 
 [auth]
-site_url = "https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com"
+site_url = "https://socialway-youtube-studio.lovable.app"
 
 [realtime]
 enabled = true
