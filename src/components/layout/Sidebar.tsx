@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Upload, BarChart3, Settings, Wand2, MessageSquare, User } from 'lucide-react';
+import { LayoutDashboard, Upload, BarChart3, Settings, Wand2, MessageSquare, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -20,7 +20,7 @@ export const Sidebar = () => {
     <aside className="w-64 border-r bg-white/50 backdrop-blur-sm h-screen flex flex-col">
       <div className="p-6 flex items-center justify-center">
         <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-400 to-blue-500 flex items-center justify-center">
-          <User size={20} color="white" />
+          <Zap size={20} color="white" />
         </div>
       </div>
       <nav className="flex-1 px-3">
