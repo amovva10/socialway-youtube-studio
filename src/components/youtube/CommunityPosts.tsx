@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +40,8 @@ export const CommunityPosts = () => {
     const storedChannel = localStorage.getItem('youtubeChannel');
     if (storedChannel) {
       setChannelData(JSON.parse(storedChannel));
+      // Automatically show post form when user is connected
+      setShowPostForm(true);
     }
   }, []);
 
@@ -94,25 +95,19 @@ export const CommunityPosts = () => {
       });
       return;
     }
-
     setShowPostForm(!showPostForm);
   };
 
   const handlePostCreated = () => {
-    // Refresh posts after a new one is created
-    setShowPostForm(false);
-    
-    // We'll add the new post to the beginning of the list to simulate
-    // real-time updates (in a real app, we'd refetch from the API)
+    setShowPostForm(true); // Keep form visible after posting
     const newPost = {
-      title: "Your Post",
-      contentHtml: "Your new post has been created!",
+      title: "New Post",
+      contentHtml: "Your post has been created and will be visible to your community!",
       authorDisplayName: channelData?.channelName || "Your Channel",
       publishedAt: new Date().toISOString(),
       likeCount: 0,
       replyCount: 0
     };
-    
     setPosts([newPost, ...posts]);
   };
 
@@ -138,11 +133,12 @@ export const CommunityPosts = () => {
         )}
       </div>
 
-      {/* Show post form if user has clicked Create Post */}
-      {showPostForm && channelData?.accessToken && (
+      {/* Show post form if user is connected */}
+      {channelData?.accessToken && showPostForm && (
         <CreateCommunityPost onPostCreated={handlePostCreated} />
       )}
 
+      {/* Categories and Posts section */}
       {!channelData?.accessToken && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-4">Trending Categories</h3>
@@ -167,6 +163,7 @@ export const CommunityPosts = () => {
         </div>
       )}
 
+      {/* Display posts */}
       {posts.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center">
