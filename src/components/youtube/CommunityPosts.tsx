@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, TrendingUp, MessageSquare, Share } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ConnectButton } from "./ConnectButton";
 
 interface CommunityPost {
   title: string;
@@ -13,6 +14,7 @@ interface CommunityPost {
   publishedAt: string;
   likeCount: number;
   replyCount: number;
+  thumbnail?: string;
 }
 
 export const CommunityPosts = () => {
@@ -31,15 +33,10 @@ export const CommunityPosts = () => {
   useEffect(() => {
     const fetchCommunityPosts = async () => {
       try {
-        if (!channelData?.accessToken) {
-          setIsLoading(false);
-          return;
-        }
-
         const { data, error } = await supabase.functions.invoke('super-processor', {
           body: {
             action: 'fetch-community-posts',
-            accessToken: channelData.accessToken
+            accessToken: channelData?.accessToken || null
           }
         });
 
@@ -71,7 +68,6 @@ export const CommunityPosts = () => {
       return;
     }
 
-    // For now, we'll just show a toast. We'll implement the full posting UI later
     toast({
       title: "Coming Soon",
       description: "Post creation will be available in the next update!",
@@ -90,28 +86,34 @@ export const CommunityPosts = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">YouTube Community</h2>
-        <Button 
-          onClick={handleCreatePost}
-          disabled={!channelData?.accessToken}
-        >
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Create Post
-        </Button>
+        {channelData?.accessToken ? (
+          <Button onClick={handleCreatePost}>
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Create Post
+          </Button>
+        ) : (
+          <ConnectButton />
+        )}
       </div>
 
       {posts.length === 0 ? (
         <Card>
-          <CardContent className="p-6 text-center text-gray-500">
-            {channelData?.accessToken ? 
-              "No community posts found" :
-              "Connect your YouTube account to see community posts"
-            }
+          <CardContent className="p-6 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <MessageSquare className="h-12 w-12 text-gray-400" />
+              <div className="text-lg font-medium">No Posts Found</div>
+              {!channelData?.accessToken && (
+                <p className="text-gray-500">
+                  Connect your YouTube account to create and view your community posts
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
           {posts.map((post, index) => (
-            <Card key={index}>
+            <Card key={index} className="overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex justify-between items-start">
                   <div>
@@ -127,14 +129,21 @@ export const CommunityPosts = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {post.thumbnail && (
+                  <img 
+                    src={post.thumbnail} 
+                    alt={post.title}
+                    className="w-full h-48 object-cover rounded-md mb-4"
+                  />
+                )}
                 <div 
                   className="prose prose-sm max-w-none"
                   dangerouslySetInnerHTML={{ __html: post.contentHtml }}
                 />
                 <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
                   <div className="flex items-center space-x-4">
-                    <span>{post.likeCount} likes</span>
-                    <span>{post.replyCount} replies</span>
+                    <span>{post.likeCount.toLocaleString()} likes</span>
+                    <span>{post.replyCount.toLocaleString()} comments</span>
                   </div>
                   <Button variant="ghost" size="sm">
                     <Share className="h-4 w-4 mr-2" />
