@@ -1,5 +1,5 @@
 
-import { Bell, ArrowLeft } from 'lucide-react';
+import { Bell, ArrowLeft, UserRound } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -34,8 +34,8 @@ export const Header = () => {
             <Bell size={20} />
           </button>
           <Avatar>
-            <AvatarFallback className="bg-gradient-to-r from-blue-400 to-blue-500">
-              U
+            <AvatarFallback className="bg-gradient-to-r from-purple-400 to-purple-500 text-white flex items-center justify-center">
+              <UserRound size={20} />
             </AvatarFallback>
           </Avatar>
         </div>
