@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ConnectButton } from "./ConnectButton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
+import { CreateCommunityPost } from "./CreateCommunityPost";
 
 interface CommunityPost {
   title: string;
@@ -34,6 +35,7 @@ export const CommunityPosts = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const { toast } = useToast();
   const [channelData, setChannelData] = useState<any>(null);
+  const [showPostForm, setShowPostForm] = useState(false);
 
   useEffect(() => {
     const storedChannel = localStorage.getItem('youtubeChannel');
@@ -83,7 +85,7 @@ export const CommunityPosts = () => {
     }
   };
 
-  const handleCreatePost = async () => {
+  const handleCreatePost = () => {
     if (!channelData?.accessToken) {
       toast({
         title: "Authentication Required",
@@ -93,10 +95,25 @@ export const CommunityPosts = () => {
       return;
     }
 
-    toast({
-      title: "Coming Soon",
-      description: "Post creation will be available in the next update!",
-    });
+    setShowPostForm(!showPostForm);
+  };
+
+  const handlePostCreated = () => {
+    // Refresh posts after a new one is created
+    setShowPostForm(false);
+    
+    // We'll add the new post to the beginning of the list to simulate
+    // real-time updates (in a real app, we'd refetch from the API)
+    const newPost = {
+      title: "Your Post",
+      contentHtml: "Your new post has been created!",
+      authorDisplayName: channelData?.channelName || "Your Channel",
+      publishedAt: new Date().toISOString(),
+      likeCount: 0,
+      replyCount: 0
+    };
+    
+    setPosts([newPost, ...posts]);
   };
 
   if (isLoading) {
@@ -114,12 +131,17 @@ export const CommunityPosts = () => {
         {channelData?.accessToken ? (
           <Button onClick={handleCreatePost}>
             <MessageSquare className="mr-2 h-4 w-4" />
-            Create Post
+            {showPostForm ? "Cancel" : "Create Post"}
           </Button>
         ) : (
           <ConnectButton />
         )}
       </div>
+
+      {/* Show post form if user has clicked Create Post */}
+      {showPostForm && channelData?.accessToken && (
+        <CreateCommunityPost onPostCreated={handlePostCreated} />
+      )}
 
       {!channelData?.accessToken && (
         <div className="mb-6">
