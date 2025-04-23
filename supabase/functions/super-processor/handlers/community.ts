@@ -44,6 +44,11 @@ export async function handleCommunityPosts(accessToken: string | null) {
       // Get trending YouTube creators and their recent community engagement
       const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API');
       
+      if (!YOUTUBE_API_KEY) {
+        console.error("YouTube API key not found in environment variables");
+        throw new Error("YouTube API key not configured");
+      }
+      
       // Get trending gaming channels as an example
       const trendingResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&maxResults=5&key=${YOUTUBE_API_KEY}`
@@ -71,6 +76,6 @@ export async function handleCommunityPosts(accessToken: string | null) {
     
   } catch (error) {
     console.error("Error fetching community posts:", error);
-    throw error;
+    return { posts: [], error: error.message };
   }
 }
