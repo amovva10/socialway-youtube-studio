@@ -1,5 +1,4 @@
 
-// Main edge function handler
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from './utils/cors.ts';
 import { handleCommunityPosts } from './handlers/community.ts';
