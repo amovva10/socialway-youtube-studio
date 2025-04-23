@@ -1,13 +1,41 @@
 
-import { Bell, ArrowLeft, UserRound } from 'lucide-react';
+import { Bell, ArrowLeft, UserRound, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const showBackButton = location.pathname !== '/';
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      // Clear YouTube connection data from localStorage
+      localStorage.removeItem('youtubeChannel');
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "Error logging out",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <header className="border-b bg-white/50 backdrop-blur-sm">
@@ -33,11 +61,21 @@ export const Header = () => {
           <button className="p-2 text-gray-600 hover:text-gray-800 transition-colors">
             <Bell size={20} />
           </button>
-          <Avatar>
-            <AvatarFallback className="bg-gradient-to-r from-purple-400 to-purple-500 text-white flex items-center justify-center">
-              <UserRound size={20} />
-            </AvatarFallback>
-          </Avatar>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="cursor-pointer">
+                <AvatarFallback className="bg-gradient-to-r from-purple-400 to-purple-500 text-white flex items-center justify-center">
+                  <UserRound size={20} />
+                </AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
