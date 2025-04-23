@@ -23,9 +23,11 @@ export const Header = () => {
               <ArrowLeft size={20} />
             </Button>
           )}
-          <h1 className="text-2xl font-semibold text-gray-800 font-display">
-            SocialWay.ai – YouTube Integration
-          </h1>
+          <img 
+            src="/lovable-uploads/4e36c889-4225-4412-ab72-909ae5c3978e.png" 
+            alt="SocialWay.ai Logo" 
+            className="h-8 w-auto"
+          />
         </div>
         <div className="flex items-center space-x-4">
           <button className="p-2 text-gray-600 hover:text-gray-800 transition-colors">
