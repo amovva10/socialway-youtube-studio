@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +43,9 @@ export const CommunityPosts = () => {
   useEffect(() => {
     const fetchCommunityPosts = async () => {
       try {
+        setIsLoading(true);
+        console.log(`Fetching posts with category: ${selectedCategory}`);
+        
         const { data, error } = await supabase.functions.invoke('super-processor', {
           body: {
             action: 'fetch-community-posts',
@@ -51,7 +55,8 @@ export const CommunityPosts = () => {
         });
 
         if (error) throw error;
-
+        
+        console.log("Received posts:", data.posts);
         setPosts(data.posts || []);
       } catch (error) {
         console.error('Error fetching community posts:', error);
@@ -67,6 +72,14 @@ export const CommunityPosts = () => {
 
     fetchCommunityPosts();
   }, [channelData, selectedCategory, toast]);
+
+  const handleCategoryChange = (value: string) => {
+    if (value) {
+      console.log(`Category changed to: ${value}`);
+      setSelectedCategory(value);
+      // Posts will be fetched by the useEffect that depends on selectedCategory
+    }
+  };
 
   const handleCreatePost = async () => {
     if (!channelData?.accessToken) {
@@ -112,7 +125,7 @@ export const CommunityPosts = () => {
           <ToggleGroup 
             type="single" 
             value={selectedCategory}
-            onValueChange={(value) => value && setSelectedCategory(value)}
+            onValueChange={handleCategoryChange}
             className="justify-start"
           >
             {categories.map((category) => (

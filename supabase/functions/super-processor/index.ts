@@ -17,7 +17,7 @@ serve(async (req) => {
 
   // Parse the request body
   const requestData = await req.json();
-  const { query, videoId, accessToken, action, useSimulatedData } = requestData;
+  const { query, videoId, accessToken, action, useSimulatedData, category } = requestData;
 
   console.log("Request data:", requestData);
 
@@ -37,7 +37,7 @@ serve(async (req) => {
 
       case 'fetch-community-posts':
         return new Response(
-          JSON.stringify(await handleCommunityPosts(accessToken)),
+          JSON.stringify(await handleCommunityPosts(accessToken, category)),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }
