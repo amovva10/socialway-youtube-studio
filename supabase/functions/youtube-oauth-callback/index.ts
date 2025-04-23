@@ -18,11 +18,13 @@ Deno.serve(async (req) => {
     const code = url.searchParams.get('code')
     const error = url.searchParams.get('error')
     const state = url.searchParams.get('state')
-    const origin = req.headers.get('origin') || url.origin
+    
+    // Get app_origin from URL parameters or fallback to a default
+    const appOrigin = url.searchParams.get('app_origin') || url.origin
 
     console.log('Received callback with code:', code ? 'present' : 'missing')
     console.log('State parameter:', state || 'missing')
-    console.log('Origin:', origin)
+    console.log('Origin:', appOrigin)
     
     // Check if there's an error in the callback
     if (error) {
@@ -127,14 +129,22 @@ Deno.serve(async (req) => {
       channelId,
       hasThumbnail: !!thumbnailUrl
     })
-
-    // Get the app_origin parameter from the URL
-    const appOrigin = url.searchParams.get('app_origin') || 'https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com'
     
     console.log('Detected app origin:', appOrigin)
     
-    // Instead of an HTML redirect page, perform a direct HTTP redirect
-    const redirectUrl = `${appOrigin}/youtube-connected?channel=${encodeURIComponent(channel)}&id=${encodeURIComponent(channelId)}&thumbnail=${encodeURIComponent(thumbnailUrl)}&access_token=${encodeURIComponent(tokenData.access_token)}`
+    // Clean up URL by removing trailing slashes if present
+    const cleanAppOrigin = appOrigin.replace(/\/+$/, '')
+    
+    // Build redirect URL with all the tokens including refresh_token
+    const redirectUrl = `${cleanAppOrigin}/youtube-connected?` + new URLSearchParams({
+      channel: channel,
+      id: channelId,
+      thumbnail: thumbnailUrl,
+      access_token: tokenData.access_token,
+      refresh_token: tokenData.refresh_token || '',
+      expires_in: tokenData.expires_in?.toString() || '',
+      token_type: tokenData.token_type || 'Bearer'
+    }).toString()
     
     console.log('Redirecting to:', redirectUrl)
     

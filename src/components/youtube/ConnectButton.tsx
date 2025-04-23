@@ -13,6 +13,9 @@ export const ConnectButton = () => {
   const handleConnect = async () => {
     setIsLoading(true);
     try {
+      // Clear previous YouTube connection data
+      localStorage.removeItem('youtubeChannel');
+      
       // Get client ID from Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('get-youtube-client-id');
       

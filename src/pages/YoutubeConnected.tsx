@@ -15,13 +15,18 @@ const YoutubeConnected = () => {
   const channelId = searchParams.get('id') || 'Unknown';
   const thumbnailUrl = searchParams.get('thumbnail') || '';
   const accessToken = searchParams.get('access_token') || '';
+  const refreshToken = searchParams.get('refresh_token') || '';
+  const expiresIn = parseInt(searchParams.get('expires_in') || '3600', 10);
+  const tokenType = searchParams.get('token_type') || 'Bearer';
 
   useEffect(() => {
     console.log('YouTube connected page loaded with params:', {
       channelName,
       channelId,
       hasThumbnail: !!thumbnailUrl,
-      hasAccessToken: !!accessToken
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      expiresIn
     });
 
     // Show a toast notification
@@ -30,17 +35,25 @@ const YoutubeConnected = () => {
       description: `Connected to channel: ${channelName}`,
     });
 
-    // Store channel info in localStorage
+    // Calculate token expiry time
+    const expiryTime = new Date();
+    expiryTime.setSeconds(expiryTime.getSeconds() + expiresIn);
+
+    // Store channel info in localStorage with more complete token information
     if (channelName && channelId) {
       localStorage.setItem('youtubeChannel', JSON.stringify({
         name: channelName,
         id: channelId,
         thumbnail: thumbnailUrl,
         connected: true,
-        accessToken: accessToken
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        tokenType: tokenType,
+        expiresAt: expiryTime.toISOString(),
+        lastConnected: new Date().toISOString()
       }));
       
-      console.log('YouTube channel info saved to localStorage');
+      console.log('YouTube channel info saved to localStorage with expiry:', expiryTime);
     }
     
     const timer = setInterval(() => {
@@ -55,7 +68,7 @@ const YoutubeConnected = () => {
       clearInterval(timer);
       clearTimeout(redirect);
     };
-  }, [navigate, channelName, channelId, thumbnailUrl, accessToken, toast]);
+  }, [navigate, channelName, channelId, thumbnailUrl, accessToken, refreshToken, expiresIn, tokenType, toast]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-white p-6">
