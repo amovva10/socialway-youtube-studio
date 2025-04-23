@@ -1,5 +1,5 @@
 
-import { Bell, ArrowLeft, UserRound, LogOut } from 'lucide-react';
+import { Bell, ArrowLeft, UserRound, LogOut, LogIn } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -11,12 +11,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useEffect, useState } from 'react';
 
 export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const showBackButton = location.pathname !== '/';
+  const [isYoutubeConnected, setIsYoutubeConnected] = useState(false);
+
+  useEffect(() => {
+    // Check if YouTube is connected by looking for channel data in localStorage
+    const channelData = localStorage.getItem('youtubeChannel');
+    setIsYoutubeConnected(!!channelData);
+
+    // Listen for changes in localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'youtubeChannel') {
+        setIsYoutubeConnected(!!e.newValue);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -61,21 +79,33 @@ export const Header = () => {
           <button className="p-2 text-gray-600 hover:text-gray-800 transition-colors">
             <Bell size={20} />
           </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="cursor-pointer">
-                <AvatarFallback className="bg-gradient-to-r from-purple-400 to-purple-500 text-white flex items-center justify-center">
-                  <UserRound size={20} />
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isYoutubeConnected ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="cursor-pointer">
+                  <AvatarFallback className="bg-gradient-to-r from-purple-400 to-purple-500 text-white flex items-center justify-center">
+                    <UserRound size={20} />
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button 
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={() => navigate('/')}
+            >
+              <LogIn className="h-4 w-4" />
+              Connect YouTube
+            </Button>
+          )}
         </div>
       </div>
     </header>
