@@ -1,11 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, TrendingUp, MessageSquare, Share } from "lucide-react";
+import { Loader2, TrendingUp, MessageSquare, Share, Globe, Briefcase, Book, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ConnectButton } from "./ConnectButton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface CommunityPost {
   title: string;
@@ -15,11 +15,20 @@ interface CommunityPost {
   likeCount: number;
   replyCount: number;
   thumbnail?: string;
+  category?: string;
 }
+
+const categories = [
+  { id: 'all', label: 'All', icon: Globe },
+  { id: 'business', label: 'Business', icon: Briefcase },
+  { id: 'education', label: 'Education', icon: Book },
+  { id: 'entertainment', label: 'Entertainment', icon: Video },
+];
 
 export const CommunityPosts = () => {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const { toast } = useToast();
   const [channelData, setChannelData] = useState<any>(null);
 
@@ -36,7 +45,8 @@ export const CommunityPosts = () => {
         const { data, error } = await supabase.functions.invoke('super-processor', {
           body: {
             action: 'fetch-community-posts',
-            accessToken: channelData?.accessToken || null
+            accessToken: channelData?.accessToken || null,
+            category: selectedCategory !== 'all' ? selectedCategory : undefined
           }
         });
 
@@ -56,7 +66,7 @@ export const CommunityPosts = () => {
     };
 
     fetchCommunityPosts();
-  }, [channelData, toast]);
+  }, [channelData, selectedCategory, toast]);
 
   const handleCreatePost = async () => {
     if (!channelData?.accessToken) {
@@ -95,6 +105,30 @@ export const CommunityPosts = () => {
           <ConnectButton />
         )}
       </div>
+
+      {!channelData?.accessToken && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-4">Trending Categories</h3>
+          <ToggleGroup 
+            type="single" 
+            value={selectedCategory}
+            onValueChange={(value) => value && setSelectedCategory(value)}
+            className="justify-start"
+          >
+            {categories.map((category) => (
+              <ToggleGroupItem 
+                key={category.id} 
+                value={category.id}
+                aria-label={category.label}
+                className="flex items-center gap-2"
+              >
+                <category.icon className="h-4 w-4" />
+                <span>{category.label}</span>
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+      )}
 
       {posts.length === 0 ? (
         <Card>
