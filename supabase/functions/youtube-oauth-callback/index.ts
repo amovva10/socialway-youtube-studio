@@ -21,7 +21,8 @@ Deno.serve(async (req) => {
     
     // Get app_origin from URL parameters or fallback to a default
     const appOrigin = url.searchParams.get('app_origin') || url.origin
-
+    
+    console.log('OAuth callback received with URL:', req.url)
     console.log('Received callback with code:', code ? 'present' : 'missing')
     console.log('State parameter:', state || 'missing')
     console.log('Origin:', appOrigin)

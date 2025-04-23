@@ -10,7 +10,7 @@ schemas = ["public", "storage", "graphql_public"]
 port = 54322
 
 [auth]
-site_url = "http://localhost:3000"
+site_url = "https://1dca5d46-4777-461c-9861-9ab468bfd891.lovableproject.com"
 
 [realtime]
 enabled = true
@@ -29,4 +29,8 @@ verify_jwt = false
 
 # Configures the youtube-upload function to be public
 [functions.youtube-upload]
+verify_jwt = false
+
+# Configures the super-processor function to be public
+[functions.super-processor]
 verify_jwt = false

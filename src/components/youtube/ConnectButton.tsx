@@ -34,9 +34,12 @@ export const ConnectButton = () => {
       console.log('Current application origin:', appOrigin);
       
       // Build the OAuth URL with the properly encoded parameters
-      // IMPORTANT: Use the exact redirect URI that's configured in Google Console
-      const redirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback";
-      const encodedRedirectUri = encodeURIComponent(redirectUri);
+      // Use the current application origin for the redirect
+      const redirectUri = `${window.location.origin}/api/youtube-callback`;
+      
+      // For Supabase edge function redirect
+      const supabaseRedirectUri = "https://fhoydbjcneodbgepfyho.supabase.co/functions/v1/youtube-oauth-callback";
+      const encodedRedirectUri = encodeURIComponent(supabaseRedirectUri);
       
       const scopes = encodeURIComponent([
         "https://www.googleapis.com/auth/youtube.readonly",
@@ -54,7 +57,8 @@ export const ConnectButton = () => {
       const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true&state=${state}&app_origin=${encodeURIComponent(appOrigin)}`;
       
       console.log("Opening OAuth URL with client ID:", CLIENT_ID);
-      console.log("Using redirect URI:", redirectUri);
+      console.log("Using redirect URI:", supabaseRedirectUri);
+      console.log("Current app origin:", appOrigin);
       
       // Update toast to be more informative
       toast({
