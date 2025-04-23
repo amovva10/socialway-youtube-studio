@@ -55,6 +55,8 @@ export const Header = () => {
         title: "Logged out successfully",
         description: "You have been logged out of your account",
       });
+      
+      // Navigate to home page
       navigate('/');
     } catch (error) {
       toast({
