@@ -4,7 +4,7 @@ import { corsHeaders } from './utils/cors.ts';
 import { handleVideoInsights } from './handlers/video.ts';
 import { handleSearchQuery } from './handlers/search.ts';
 import { generateContentInsights } from './handlers/insights.ts';
-import { handleCommunityAction } from './handlers/community.ts';
+import { handleCommunityAction, handleCommunityPosts } from './handlers/community.ts';
 import { fetchAnalytics } from './handlers/analytics.ts';
 import { fetchComments } from './handlers/comments.ts';
 
@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   }
   
   try {
-    const { action, query, videoId, accessToken, filter, postType, postContent, postTitle, mediaUrls } = await req.json();
+    const { action, query, videoId, accessToken, filter, postType, postContent, postTitle, mediaUrls, category } = await req.json();
     
     console.log('Request data:', { action, query, videoId });
     
@@ -53,6 +53,14 @@ Deno.serve(async (req) => {
         mediaUrls: mediaUrls,
         accessToken
       });
+      
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    else if (action === 'fetch-community-posts') {
+      const result = await handleCommunityPosts(accessToken, category);
       
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

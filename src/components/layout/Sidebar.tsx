@@ -21,7 +21,19 @@ export const Sidebar = () => {
     };
     
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    // Also listen for storage events from the same window
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+      const event = new Event('storage');
+      event.key = key;
+      window.dispatchEvent(event);
+      originalSetItem.apply(this, arguments);
+    };
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      localStorage.setItem = originalSetItem;
+    };
   }, []);
 
   // Define base menu items that are always shown
