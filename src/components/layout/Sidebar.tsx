@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Upload, BarChart3, Settings, Wand2, MessageSquare, Zap } from 'lucide-react';
+import { LayoutDashboard, Upload, BarChart3, Settings, Wand2, MessageSquare, Zap, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -7,6 +7,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: Wand2, label: 'Content Generator', path: '/generator' },
   { icon: MessageSquare, label: 'Community', path: '/community' },
+  { icon: MessageCircle, label: 'Comments', path: '/comments' },
   { icon: Upload, label: 'Upload Video', path: '/upload' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: Settings, label: 'Settings', path: '/settings' }
