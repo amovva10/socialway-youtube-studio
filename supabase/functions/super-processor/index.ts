@@ -3,7 +3,6 @@
 import { corsHeaders } from './utils/cors.ts';
 import { handleVideoInsights } from './handlers/video.ts';
 import { handleSearchQuery } from './handlers/search.ts';
-import { generateContentInsights } from './handlers/insights.ts';
 import { handleCommunityAction, handleCommunityPosts } from './handlers/community.ts';
 import { getAnalytics } from './handlers/analytics.ts';
 import { fetchComments } from './handlers/comments.ts';
@@ -39,7 +38,10 @@ Deno.serve(async (req) => {
       const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || '';
       const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY') || '';
       
-      const insights = await generateContentInsights(videoId, YOUTUBE_API_KEY, OPENAI_API_KEY);
+      // Import the function only when needed to avoid the import error
+      const { generateVideoInsights } = await import('./utils/insights.ts');
+      const insights = await generateVideoInsights(videoId, YOUTUBE_API_KEY, OPENAI_API_KEY);
+      
       return new Response(JSON.stringify(insights), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -93,6 +95,7 @@ Deno.serve(async (req) => {
       );
     }
   } catch (error) {
+    console.error('Error processing request:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
