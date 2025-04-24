@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,8 +70,6 @@ export const CommunityPosts = () => {
           description: "Failed to load community posts",
           variant: "destructive"
         });
-        // Set empty posts array to prevent showing loader indefinitely
-        setPosts([]);
       } finally {
         setIsLoading(false);
       }

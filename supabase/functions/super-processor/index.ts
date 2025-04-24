@@ -1,106 +1,74 @@
 
-// Main entry point for the Super Processor Edge Function
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from './utils/cors.ts';
+import { handleCommunityPosts } from './handlers/community.ts';
+import { handleChannelAnalytics } from './handlers/analytics.ts';
+import { handleChannelInsights } from './handlers/insights.ts';
+import { handleSearch } from './handlers/search.ts';
 import { handleVideoInsights } from './handlers/video.ts';
-import { handleSearchQuery } from './handlers/search.ts';
-import { handleCommunityAction, handleCommunityPosts } from './handlers/community.ts';
-import { getAnalytics } from './handlers/analytics.ts';
-import { fetchComments } from './handlers/comments.ts';
 
-Deno.serve(async (req) => {
+const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API');
+
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
-  
+
+  // Parse the request body
+  const requestData = await req.json();
+  const { query, videoId, accessToken, action, useSimulatedData, category } = requestData;
+
+  console.log("Request data:", requestData);
+
   try {
-    const { action, query, videoId, accessToken, filter, postType, postContent, postTitle, mediaUrls, category } = await req.json();
-    
-    console.log('Request data:', { action, query, videoId });
-    
-    if (action === 'video-insights' && videoId) {
-      const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY') || '';
-      const insights = await handleVideoInsights(videoId, YOUTUBE_API_KEY);
-      return new Response(JSON.stringify(insights), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    } 
-    
-    else if (action === 'search' && query) {
-      const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY') || '';
-      const searchResults = await handleSearchQuery(query, YOUTUBE_API_KEY);
-      return new Response(JSON.stringify(searchResults), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    switch (action) {
+      case 'channel-insights':
+        return new Response(
+          JSON.stringify(await handleChannelInsights(accessToken)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+
+      case 'channel-analytics':
+        return new Response(
+          JSON.stringify(await handleChannelAnalytics(accessToken, useSimulatedData)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+
+      case 'fetch-community-posts':
+        return new Response(
+          JSON.stringify(await handleCommunityPosts(accessToken, category)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
     }
-    
-    else if (action === 'generate-insights' && videoId) {
-      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || '';
-      const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_API_KEY') || '';
-      
-      // Import the function only when needed to avoid the import error
-      const { generateVideoInsights } = await import('./utils/insights.ts');
-      const insights = await generateVideoInsights(videoId, YOUTUBE_API_KEY, OPENAI_API_KEY);
-      
-      return new Response(JSON.stringify(insights), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    else if (action === 'create-community-post') {
-      const result = await handleCommunityAction('create', {
-        type: postType,
-        content: postContent,
-        title: postTitle,
-        mediaUrls: mediaUrls,
-        accessToken
-      });
-      
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    else if (action === 'fetch-community-posts') {
-      const result = await handleCommunityPosts(accessToken, category);
-      
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    else if (action === 'fetch-analytics') {
-      const result = await getAnalytics(accessToken);
-      
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    else if (action === 'fetch-comments') {
-      const result = await fetchComments(filter, accessToken);
-      
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    
-    else {
+
+    if (videoId) {
       return new Response(
-        JSON.stringify({ error: 'Missing query, videoId, or action parameter' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        JSON.stringify(await handleVideoInsights(videoId, YOUTUBE_API_KEY!)),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-  } catch (error) {
-    console.error('Error processing request:', error);
+
+    if (query) {
+      return new Response(
+        JSON.stringify(await handleSearch(query, YOUTUBE_API_KEY!)),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
+      JSON.stringify({ error: 'Missing query, videoId, or action parameter' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

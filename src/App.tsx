@@ -13,7 +13,6 @@ import Upload from "./pages/Upload";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Community from "./pages/Community";
-import Comments from "./pages/Comments";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -34,7 +33,6 @@ const App = () => {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/community" element={<Community />} />
-              <Route path="/comments" element={<Comments />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
