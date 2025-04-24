@@ -24,8 +24,7 @@ export const Sidebar = () => {
     // Also listen for storage events from the same window
     const originalSetItem = localStorage.setItem;
     localStorage.setItem = function(key, value) {
-      const event = new Event('storage');
-      event.key = key;
+      const event = new CustomEvent('storage', { detail: { key } });
       window.dispatchEvent(event);
       originalSetItem.apply(this, arguments);
     };

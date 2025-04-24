@@ -5,7 +5,7 @@ import { handleVideoInsights } from './handlers/video.ts';
 import { handleSearchQuery } from './handlers/search.ts';
 import { generateContentInsights } from './handlers/insights.ts';
 import { handleCommunityAction, handleCommunityPosts } from './handlers/community.ts';
-import { fetchAnalytics } from './handlers/analytics.ts';
+import { getAnalytics } from './handlers/analytics.ts';
 import { fetchComments } from './handlers/comments.ts';
 
 Deno.serve(async (req) => {
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     }
     
     else if (action === 'fetch-analytics') {
-      const result = await fetchAnalytics(accessToken);
+      const result = await getAnalytics(accessToken);
       
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
