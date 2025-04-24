@@ -2,20 +2,51 @@
 import { LayoutDashboard, Upload, BarChart3, Settings, Wand2, MessageSquare, Zap, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
-
-const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { icon: Wand2, label: 'Content Generator', path: '/generator' },
-  { icon: MessageSquare, label: 'Community', path: '/community' },
-  { icon: MessageCircle, label: 'Comments', path: '/comments' },
-  { icon: Upload, label: 'Upload Video', path: '/upload' },
-  { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-  { icon: Settings, label: 'Settings', path: '/settings' }
-];
+import { useState, useEffect } from 'react';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [channelConnected, setChannelConnected] = useState(false);
+  
+  useEffect(() => {
+    // Check if YouTube channel is connected
+    const storedChannel = localStorage.getItem('youtubeChannel');
+    setChannelConnected(!!storedChannel);
+    
+    // Listen for changes in localStorage
+    const handleStorageChange = () => {
+      const channel = localStorage.getItem('youtubeChannel');
+      setChannelConnected(!!channel);
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Define base menu items that are always shown
+  const baseMenuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+    { icon: Wand2, label: 'Content Generator', path: '/generator' },
+    { icon: MessageSquare, label: 'Community', path: '/community' }
+  ];
+  
+  // Define menu items that require a connected channel
+  const connectedMenuItems = [
+    { icon: MessageCircle, label: 'Comments', path: '/comments', requiresChannel: true },
+    { icon: Upload, label: 'Upload Video', path: '/upload' },
+    { icon: BarChart3, label: 'Analytics', path: '/analytics' }
+  ];
+  
+  // Settings is always shown
+  const settingsItem = { icon: Settings, label: 'Settings', path: '/settings' };
+  
+  // Combine menu items based on connection status
+  const menuItems = [
+    ...baseMenuItems,
+    ...(channelConnected ? connectedMenuItems : connectedMenuItems.filter(item => !item.requiresChannel)),
+    settingsItem
+  ];
 
   return (
     <aside className="w-64 border-r bg-white/50 backdrop-blur-sm h-screen flex flex-col">

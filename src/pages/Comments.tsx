@@ -2,9 +2,22 @@
 import { Layout } from "@/components/layout/Layout";
 import { CommentManagement } from "@/components/youtube/CommentManagement";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ConnectButton } from "@/components/youtube/ConnectButton";
 
 const Comments = () => {
+  const [channelConnected, setChannelConnected] = useState(false);
+  const [channelData, setChannelData] = useState<any>(null);
+
+  useEffect(() => {
+    const storedChannel = localStorage.getItem('youtubeChannel');
+    if (storedChannel) {
+      setChannelConnected(true);
+      setChannelData(JSON.parse(storedChannel));
+    }
+  }, []);
+
   return (
     <Layout>
       <div className="container mx-auto py-6 px-4">
@@ -22,7 +35,27 @@ const Comments = () => {
           </Card>
         </div>
         
-        <CommentManagement />
+        {channelConnected ? (
+          <CommentManagement />
+        ) : (
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center text-center space-y-4 py-8">
+                <div className="p-4 rounded-full bg-amber-100">
+                  <AlertCircle size={32} className="text-amber-600" />
+                </div>
+                <h2 className="text-xl font-semibold">YouTube Channel Not Connected</h2>
+                <p className="text-gray-500 max-w-md">
+                  Connect your YouTube channel to access comment management features 
+                  and interact with your audience.
+                </p>
+                <div className="mt-4">
+                  <ConnectButton />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </Layout>
   );
