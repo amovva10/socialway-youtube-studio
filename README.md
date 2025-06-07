@@ -1,5 +1,7 @@
 # YouTube Studio Dashboard
 
+# artiQlabs - socialway.ai youtube poc integration
+
 A  AI-powered YouTube Studio dashboard built with [Lovable.dev](https://lovable.dev), Supabase, and React. This app helps creators manage their content, generate ideas, and upload videos with ease — all in one place.
 
 ---
